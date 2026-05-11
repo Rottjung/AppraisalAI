@@ -106,6 +106,23 @@ public class LearningController : MonoBehaviour
             episodeDefinitions.Add(def);
             episodeLookup["FleeEnemy"] = def;
         }
+
+        if (!episodeLookup.ContainsKey("Attack"))
+        {
+            var def = new LearningEpisodeDefinition();
+            def.Initialize("Attack",
+                new List<string> { "AttackDrive" },
+                new List<RewardTermDefinition>
+                {
+                    new RewardTermDefinition("enemyKilled", RewardEvaluationMode.Delta, 3f),
+                    new RewardTermDefinition("health", RewardEvaluationMode.Delta, 0.5f),
+                    new RewardTermDefinition("energy", RewardEvaluationMode.Delta, -0.5f),
+                    new RewardTermDefinition("isDead", RewardEvaluationMode.EndValue, -3f),
+                },
+                3f);
+            episodeDefinitions.Add(def);
+            episodeLookup["Attack"] = def;
+        }
     }
 
     private LearningSnapshot CaptureSnapshot()

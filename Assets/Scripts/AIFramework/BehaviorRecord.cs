@@ -36,6 +36,11 @@ public sealed class BehaviorRecord
         coordinates.Clear();
     }
 
+    public void AddFilter(PayloadFilter filter)
+    {
+        filters.Add(filter);
+    }
+
     public float DistanceTo(DecisionBrain brain)
     {
         return MathUtil.WeightedDistance(coordinates, brain);

@@ -54,6 +54,20 @@ public class CreatureBrainController : MonoBehaviour
     [SerializeField] private float maxHealth = 3f;
     [SerializeField] private float damageInvincibilityTime = 1f;
 
+    [Header("Attack")]
+    [SerializeField] private float attackRange = 1.5f;
+    [SerializeField] private float attackCooldown = 0.5f;
+    [SerializeField] private float attackDamage = 1f;
+    [SerializeField] private float attackEnergyCost = 0.15f;
+
+    [Header("Energy Drain")]
+    [SerializeField] private float fleeEnergyDrainMultiplier = 0.1f;
+    [SerializeField] private float wanderSpeed = 0.8f;
+    [SerializeField] private float seekFoodSpeed = 1f;
+    [SerializeField] private float fleeBaseSpeed = 1.2f;
+    [SerializeField] private float fleeMaxSpeed = 2f;
+    [SerializeField] private float approachSpeed = 0.5f;
+
     [Header("Debug")]
     [SerializeField] private bool logDecisions = false;
     [SerializeField] private bool drawWanderTarget = true;
@@ -73,6 +87,7 @@ public class CreatureBrainController : MonoBehaviour
 
     private float health;
     private float invincibilityTimer;
+    private float attackTimer;
 
     private void Awake()
     {
@@ -87,19 +102,54 @@ public class CreatureBrainController : MonoBehaviour
     private void Start()
     {
         sensors?.EnsureSignal("health", 1f);
+        learningState?.EnsureSignal("enemyKilled", SignalType.Int, 0);
+        SetupAttackDrive();
+    }
+
+    private void SetupAttackDrive()
+    {
+        if (brain == null)
+            return;
+
+        if (brain.GetBehaviorNode("AttackDrive") != null)
+            return;
+
+        var attackDrive = new BehaviorNode("AttackDrive", "Attack Drive");
+        attackDrive.SetActivationType(ActivationType.Sigmoid);
+
+        attackDrive.AddConnection(new Connection("enemyProximity", 1.5f));
+        attackDrive.AddConnection(new Connection("energy", 0.8f));
+        attackDrive.AddConnection(new Connection("hunger", 0.3f));
+
+        brain.BehaviorNodes.Add(attackDrive);
+        brain.RebuildCaches();
+
+        var attackRecord = new BehaviorRecord("attack_record", "Attack");
+        attackRecord.AddCoordinate(new BehaviorCoordinate("AttackDrive", 1f));
+        attackRecord.AddCoordinate(new BehaviorCoordinate("FoodDrive", 0f));
+        attackRecord.AddCoordinate(new BehaviorCoordinate("Fear", 0f));
+        attackRecord.AddCoordinate(new BehaviorCoordinate("WanderDrive", 0f));
+        attackRecord.AddCoordinate(new BehaviorCoordinate("RepickDrive", 0f));
+        attackRecord.AddFilter(new PayloadFilter
+            { signalId = "enemyProximity", comparison = ComparisonType.Greater, value = 0f });
+        attackRecord.AddFilter(new PayloadFilter
+            { signalId = "energy", comparison = ComparisonType.Greater, value = 0.2f });
+
+        brain.Cloud.AddRecord(attackRecord);
     }
 
     private void Update()
     {
         if (sensors == null || controller == null)
-        {
             return;
-        }
 
         float dt = Time.deltaTime;
 
         if (invincibilityTimer > 0f)
             invincibilityTimer -= dt;
+
+        if (attackTimer > 0f)
+            attackTimer -= dt;
 
         if (isDead)
         {
@@ -126,9 +176,7 @@ public class CreatureBrainController : MonoBehaviour
         UpdateIdleTime();
 
         if (Input.GetKeyDown(KeyCode.L))
-        {
             learningController.ToggleLog();
-        }
     }
 
     private float GetMetabolicStress()
@@ -155,12 +203,17 @@ public class CreatureBrainController : MonoBehaviour
             Debug.Log($"Creature took {amount} damage, health={health}/{maxHealth}", this);
     }
 
+    public void OnEnemyKilled()
+    {
+        learningState?.Apply("enemyKilled", 1f, true);
+        if (logDecisions)
+            Debug.Log("Creature killed an enemy!", this);
+    }
+
     private void CheckDeath()
     {
         if (sensors.GetValue("energy") <= 0f || health <= 0f)
-        {
             Die();
-        }
     }
 
     public void Die()
@@ -177,17 +230,13 @@ public class CreatureBrainController : MonoBehaviour
         debugText.text = "Dead";
 
         if (logDecisions)
-        {
             Debug.Log("Creature died.", this);
-        }
     }
 
     private void EvaluateDecision()
     {
         if (brain == null || sensors == null || isDead)
-        {
             return;
-        }
 
         sensors.Sense();
         brain.EvaluateAll();
@@ -219,16 +268,10 @@ public class CreatureBrainController : MonoBehaviour
         debugText.text = proposedPayload;
 
         if (logDecisions)
-        {
-            Debug.Log(
-                $"Proposed={proposedPayload} stress={GetMetabolicStress():F2} recovery={GetRecoveryNeed():F2}",
-                this);
-        }
+            Debug.Log($"Proposed={proposedPayload} stress={GetMetabolicStress():F2} recovery={GetRecoveryNeed():F2}", this);
 
         if (currentPayload != proposedPayload)
-        {
             OnPayloadChanged(currentPayload, proposedPayload);
-        }
 
         currentPayload = proposedPayload;
     }
@@ -296,6 +339,7 @@ public class CreatureBrainController : MonoBehaviour
             case "Wander":
             case "SeekFood":
             case "FleeEnemy":
+            case "Attack":
                 learningController.BeginEpisode(payload);
                 activeEpisodeType = payload;
                 break;
@@ -320,6 +364,10 @@ public class CreatureBrainController : MonoBehaviour
 
             case "RepickTarget":
                 RepickTarget();
+                break;
+
+            case "Attack":
+                Attack();
                 break;
 
             case "Idle":
@@ -353,6 +401,7 @@ public class CreatureBrainController : MonoBehaviour
         }
 
         Vector3 dir = MathUtil.DirectionXZ(transform.position, food.transform.position);
+        controller.SpeedMultiplier = seekFoodSpeed;
         controller.Move(dir * moveStrength);
     }
 
@@ -374,7 +423,46 @@ public class CreatureBrainController : MonoBehaviour
             return;
         }
 
+        float energy = sensors.GetValue("energy");
+        float speedMod = Mathf.Lerp(fleeBaseSpeed, fleeMaxSpeed, energy);
+        controller.SpeedMultiplier = speedMod;
+        sensors.ApplyToSignal("energy", -fleeEnergyDrainMultiplier * speedMod * Time.deltaTime);
         controller.Move(dir * moveStrength);
+    }
+
+    private void Attack()
+    {
+        Sensor enemySensor = sensors.GetSensor("enemyProximity");
+        WorldTarget enemy = enemySensor != null ? enemySensor.LastDetectedWorldTarget : null;
+
+        if (enemy == null)
+        {
+            controller.Stop();
+            return;
+        }
+
+        float distance = MathUtil.DistanceXZ(transform.position, enemy.transform.position);
+
+        if (distance <= attackRange)
+        {
+            if (attackTimer <= 0f)
+            {
+                attackTimer = attackCooldown;
+
+                EnemyWander enemyWander = enemy.GetComponent<EnemyWander>();
+                if (enemyWander != null)
+                    enemyWander.TakeDamage(attackDamage);
+
+                sensors.ApplyToSignal("energy", -attackEnergyCost);
+            }
+            controller.Stop();
+        }
+        else
+        {
+            Vector3 dir = MathUtil.DirectionXZ(transform.position, enemy.transform.position);
+            controller.SpeedMultiplier = approachSpeed;
+            controller.Move(dir * moveStrength);
+        }
     }
 
     private void Wander()
@@ -386,9 +474,7 @@ public class CreatureBrainController : MonoBehaviour
         }
 
         if (!hasWanderTarget)
-        {
             PickNewWanderTarget();
-        }
 
         wanderRetargetTimer -= Time.deltaTime;
         wanderTarget = levelBounds.ClampPointInside(wanderTarget);
@@ -405,8 +491,10 @@ public class CreatureBrainController : MonoBehaviour
             PickNewWanderTarget();
             wanderRetargetTimer = retargetInterval;
         }
-        if(wanderTransform)
+
+        if (wanderTransform)
             wanderTransform.position = wanderTarget;
+
         Vector3 dir = MathUtil.DirectionXZ(transform.position, wanderTarget);
         if (dir.sqrMagnitude <= 0.0001f)
         {
@@ -414,6 +502,7 @@ public class CreatureBrainController : MonoBehaviour
             return;
         }
 
+        controller.SpeedMultiplier = wanderSpeed;
         controller.Move(dir * moveStrength);
     }
 
@@ -429,6 +518,7 @@ public class CreatureBrainController : MonoBehaviour
     private void Idle()
     {
         sensors.ApplyToSignal("energy", idleEnergyGainPerSecond * Time.deltaTime);
+        controller.SpeedMultiplier = 0f;
         controller.Stop();
     }
 
@@ -479,7 +569,6 @@ public class CreatureBrainController : MonoBehaviour
                     forwardDir,
                     forwardBias
                 );
-
                 proposed = levelBounds.ClampPointInside(proposed);
             }
         }
@@ -490,9 +579,7 @@ public class CreatureBrainController : MonoBehaviour
         if (logDecisions)
         {
             float distanceFromCurrent = MathUtil.DistanceXZ(transform.position, wanderTarget);
-            Debug.Log(
-                $"New Wander Target | ref={(usePreviousAsReference ? "previous" : "current")} target={wanderTarget} distanceFromCurrent={distanceFromCurrent:F2}",
-                this);
+            Debug.Log($"New Wander Target | ref={(usePreviousAsReference ? "previous" : "current")} target={wanderTarget} distanceFromCurrent={distanceFromCurrent:F2}", this);
         }
     }
 
@@ -508,9 +595,7 @@ public class CreatureBrainController : MonoBehaviour
         maxDistanceLocal = Mathf.Max(minDistanceLocal, maxDistanceLocal);
 
         if (forwardDir.sqrMagnitude <= 0.0001f || forwardBiasLocal <= 0f)
-        {
             return MathUtil.RandomPointInBounds(bounds, referencePoint, maxDistanceLocal, minDistanceLocal);
-        }
 
         float distance = Random.Range(minDistanceLocal, maxDistanceLocal);
 
@@ -519,13 +604,9 @@ public class CreatureBrainController : MonoBehaviour
         blendedDir.y = 0f;
 
         if (blendedDir.sqrMagnitude <= 0.0001f)
-        {
             blendedDir = randomDir;
-        }
         else
-        {
             blendedDir.Normalize();
-        }
 
         Vector3 point = referencePoint + blendedDir * distance;
         point.x = Mathf.Clamp(point.x, bounds.min.x, bounds.max.x);
@@ -541,18 +622,14 @@ public class CreatureBrainController : MonoBehaviour
         {
             Vector3 targetDir = MathUtil.DirectionXZ(transform.position, wanderTarget);
             if (targetDir.sqrMagnitude > 0.0001f)
-            {
                 return targetDir;
-            }
         }
 
         Vector3 forward = transform.forward;
         forward.y = 0f;
 
         if (forward.sqrMagnitude > 0.0001f)
-        {
             return forward.normalized;
-        }
 
         return Vector3.zero;
     }
@@ -567,18 +644,14 @@ public class CreatureBrainController : MonoBehaviour
         learningState?.Apply("foodConsumed", 1f, true);
         sensors.ApplyToSignal("hunger", -hungerRestore);
         sensors.ApplyToSignal("energy", energyRestoreOnEat);
-
         Destroy(food);
-
         hasWanderTarget = false;
     }
 
     private void OnDrawGizmosSelected()
     {
         if (!drawWanderTarget)
-        {
             return;
-        }
 
         if (hasWanderTarget)
         {

@@ -18,6 +18,9 @@ public class EnemyWander : MonoBehaviour
     [SerializeField] private float chaseSpeed = 6f;
     [SerializeField] private float loseInterestDistance = 18f;
 
+    [Header("Health")]
+    [SerializeField] private float maxHealth = 3f;
+
     [Header("Debug")]
     [SerializeField] private bool drawGizmos = true;
 
@@ -27,12 +30,14 @@ public class EnemyWander : MonoBehaviour
     private Transform creatureTarget;
     private bool isChasing;
     private float defaultSpeed;
+    private float health;
 
     private void Awake()
     {
         if (controller == null)
             controller = GetComponent<Controller>();
         defaultSpeed = controller.Speed;
+        health = maxHealth;
     }
 
     private void Start()
@@ -128,6 +133,20 @@ public class EnemyWander : MonoBehaviour
             controller.Move(dir);
         else
             controller.Move(Vector3.zero);
+    }
+
+    public void TakeDamage(float amount)
+    {
+        health -= amount;
+
+        if (health <= 0f)
+        {
+            CreatureBrainController creature = FindFirstObjectByType<CreatureBrainController>();
+            if (creature != null)
+                creature.OnEnemyKilled();
+
+            Destroy(gameObject);
+        }
     }
 
     private void PickNewTarget()

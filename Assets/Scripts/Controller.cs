@@ -3,10 +3,13 @@ using UnityEngine;
 public class Controller : MonoBehaviour
 {
     [SerializeField] private float speed = 3f;
-    [SerializeField] private float turnSpeedDegrees = 360f; // degrees per second
-    [SerializeField] private float acceleration = 8f;       // how fast movement strength ramps up/down
+    [SerializeField] private float turnSpeedDegrees = 360f;
+    [SerializeField] private float acceleration = 8f;
     [SerializeField] private Transform arrow;
+    [SerializeField] private float speedMultiplier = 1f;
+
     public float Speed { get => speed; set => speed = value; }
+    public float SpeedMultiplier { get => speedMultiplier; set => speedMultiplier = Mathf.Max(0f, value); }
     public bool IsMoving => isMoving;
 
     private Vector3 currentDirection = Vector3.forward;
@@ -21,20 +24,17 @@ public class Controller : MonoBehaviour
         {
             direction.Normalize();
 
-            // Smoothly rotate toward the new target direction.
             float maxRadiansDelta = turnSpeedDegrees * Mathf.Deg2Rad * Time.deltaTime;
             currentDirection = Vector3.RotateTowards(currentDirection, direction, maxRadiansDelta, 0f).normalized;
 
-            // Smoothly ramp movement strength up.
             currentMoveStrength = Mathf.MoveTowards(currentMoveStrength, 1f, acceleration * Time.deltaTime);
         }
         else
         {
-            // Smoothly ramp movement strength down if no valid input.
             currentMoveStrength = Mathf.MoveTowards(currentMoveStrength, 0f, acceleration * Time.deltaTime);
         }
 
-        Vector3 velocity = currentDirection * speed * currentMoveStrength;
+        Vector3 velocity = currentDirection * speed * speedMultiplier * currentMoveStrength;
         transform.position += velocity * Time.deltaTime;
 
         if (arrow && currentDirection.sqrMagnitude > 0.0001f)
