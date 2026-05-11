@@ -58,15 +58,19 @@ public class CreatureBrainController : MonoBehaviour
     [SerializeField] private float attackRange = 1.5f;
     [SerializeField] private float attackCooldown = 0.5f;
     [SerializeField] private float attackDamage = 1f;
-    [SerializeField] private float attackEnergyCost = 0.15f;
+    [SerializeField] private float attackEnergyCost = 0.06f;
 
     [Header("Energy Drain")]
-    [SerializeField] private float fleeEnergyDrainMultiplier = 0.15f;
+    [SerializeField] private float fleeEnergyDrainMultiplier = 0.05f;
     [SerializeField] private float wanderSpeed = 0.6f;
     [SerializeField] private float seekFoodSpeed = 1f;
     [SerializeField] private float fleeBaseSpeed = 1.5f;
     [SerializeField] private float fleeMaxSpeed = 2.5f;
     [SerializeField] private float approachSpeed = 0.5f;
+
+    [Header("Episodes")]
+    [SerializeField] private int maxLifetimes = 100;
+    [SerializeField] private float respawnDelay = 1f;
 
     [Header("Debug")]
     [SerializeField] private bool logDecisions = false;
@@ -81,6 +85,9 @@ public class CreatureBrainController : MonoBehaviour
 
     private bool isDead;
     private string activeEpisodeType;
+    private int currentLifetime;
+    private float deathTimer;
+    private bool waitingForRespawn;
 
     private FeatureNode cachedMetabolicStress;
     private FeatureNode cachedRecoveryNeed;
@@ -126,7 +133,7 @@ public class CreatureBrainController : MonoBehaviour
         var attackRecord = new BehaviorRecord("attack_record", "Attack");
         attackRecord.AddCoordinate(new BehaviorCoordinate("AttackDrive", 1f));
         attackRecord.AddCoordinate(new BehaviorCoordinate("FoodDrive", 0f));
-        attackRecord.AddCoordinate(new BehaviorCoordinate("Fear", 0f));
+        attackRecord.AddCoordinate(new BehaviorCoordinate("Fear", 0.3f));
         attackRecord.AddCoordinate(new BehaviorCoordinate("WanderDrive", 0f));
         attackRecord.AddCoordinate(new BehaviorCoordinate("RepickDrive", 0f));
         attackRecord.AddFilter(new PayloadFilter
@@ -153,6 +160,13 @@ public class CreatureBrainController : MonoBehaviour
         if (isDead)
         {
             controller.Stop();
+
+            if (waitingForRespawn)
+            {
+                deathTimer -= dt;
+                if (deathTimer <= 0f)
+                    Respawn();
+            }
             return;
         }
 
@@ -161,6 +175,13 @@ public class CreatureBrainController : MonoBehaviour
         if (isDead)
         {
             controller.Stop();
+
+            if (waitingForRespawn)
+            {
+                deathTimer -= dt;
+                if (deathTimer <= 0f)
+                    Respawn();
+            }
             return;
         }
 
@@ -217,19 +238,59 @@ public class CreatureBrainController : MonoBehaviour
 
     public void Die()
     {
-        learningState?.Apply("isDead", 1f, false);
+        if (isDead)
+            return;
 
+        learningState?.Apply("isDead", 1f, false);
         EndActiveEpisode();
 
         isDead = true;
         currentPayload = "Dead";
         hasWanderTarget = false;
         controller.Stop();
-
         debugText.text = "Dead";
 
+        currentLifetime++;
+
         if (logDecisions)
-            Debug.Log("Creature died.", this);
+            Debug.Log($"Creature died. Lifetime {currentLifetime}/{maxLifetimes}", this);
+
+        if (currentLifetime >= maxLifetimes)
+        {
+            debugText.text = "Done";
+            if (logDecisions)
+                Debug.Log("All lifetimes complete.", this);
+            return;
+        }
+
+        waitingForRespawn = true;
+        deathTimer = respawnDelay;
+    }
+
+    private void Respawn()
+    {
+        waitingForRespawn = false;
+        isDead = false;
+        health = maxHealth;
+        invincibilityTimer = 0f;
+        attackTimer = 0f;
+        decisionTimer = 0f;
+
+        sensors?.SetSignal("health", 1f);
+        sensors?.SetSignal("energy", 1f);
+        sensors?.SetSignal("hunger", 0f);
+        sensors?.SetSignal("idleTime", 0f);
+        learningState?.Apply("isDead", 0f, false);
+
+        if (levelBounds != null)
+            transform.position = levelBounds.GetRandomPointInside();
+
+        currentPayload = "Idle";
+        hasWanderTarget = false;
+        debugText.text = "Respawn";
+
+        if (logDecisions)
+            Debug.Log($"Creature respawned. Lifetime {currentLifetime}/{maxLifetimes}", this);
     }
 
     private void EvaluateDecision()
