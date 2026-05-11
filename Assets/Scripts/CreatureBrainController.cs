@@ -467,6 +467,9 @@ public class CreatureBrainController : MonoBehaviour
         Vector3 dir = MathUtil.DirectionXZ(transform.position, food.transform.position);
         controller.SpeedMultiplier = seekFoodSpeed;
         controller.Move(dir * moveStrength);
+
+        if (levelBounds != null)
+            transform.position = levelBounds.ClampPointInside(transform.position);
     }
 
     private void FleeEnemy()
@@ -492,6 +495,9 @@ public class CreatureBrainController : MonoBehaviour
         controller.SpeedMultiplier = speedMod;
         sensors.ApplyToSignal("energy", -fleeEnergyDrainMultiplier * speedMod * Time.deltaTime);
         controller.Move(dir * moveStrength);
+
+        if (levelBounds != null)
+            transform.position = levelBounds.ClampPointInside(transform.position);
     }
 
     private void Attack()
@@ -527,6 +533,9 @@ public class CreatureBrainController : MonoBehaviour
             controller.SpeedMultiplier = approachSpeed;
             controller.Move(dir * moveStrength);
         }
+
+        if (levelBounds != null)
+            transform.position = levelBounds.ClampPointInside(transform.position);
     }
 
     private void Wander()
