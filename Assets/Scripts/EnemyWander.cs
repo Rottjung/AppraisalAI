@@ -37,6 +37,8 @@ public class EnemyWander : MonoBehaviour
             controller = GetComponent<Controller>();
         defaultSpeed = controller.Speed;
         health = maxHealth;
+        if (levelBounds == null)
+            levelBounds = FindFirstObjectByType<LevelBounds>();
     }
 
     private void Start()
