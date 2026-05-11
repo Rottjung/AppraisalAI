@@ -68,6 +68,19 @@ public class LevelBounds : MonoBehaviour
         return point;
     }
 
+    public Vector3 ClampPointInsideXZ(Vector3 point)
+    {
+        if (!hasCachedBounds)
+        {
+            RebuildCache();
+        }
+
+        point.x = Mathf.Clamp(point.x, cachedBounds.min.x, cachedBounds.max.x);
+        point.z = Mathf.Clamp(point.z, cachedBounds.min.z, cachedBounds.max.z);
+
+        return point;
+    }
+
     internal Bounds GetWorldBounds()
     {
         if (!hasCachedBounds)

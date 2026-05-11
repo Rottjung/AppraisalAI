@@ -469,7 +469,7 @@ public class CreatureBrainController : MonoBehaviour
         controller.Move(dir * moveStrength);
 
         if (levelBounds != null)
-            transform.position = levelBounds.ClampPointInside(transform.position);
+            transform.position = levelBounds.ClampPointInsideXZ(transform.position);
     }
 
     private void FleeEnemy()
@@ -497,7 +497,7 @@ public class CreatureBrainController : MonoBehaviour
         controller.Move(dir * moveStrength);
 
         if (levelBounds != null)
-            transform.position = levelBounds.ClampPointInside(transform.position);
+            transform.position = levelBounds.ClampPointInsideXZ(transform.position);
     }
 
     private void Attack()
@@ -535,7 +535,7 @@ public class CreatureBrainController : MonoBehaviour
         }
 
         if (levelBounds != null)
-            transform.position = levelBounds.ClampPointInside(transform.position);
+            transform.position = levelBounds.ClampPointInsideXZ(transform.position);
     }
 
     private void Wander()

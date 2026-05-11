@@ -132,7 +132,7 @@ public class EnemyWander : MonoBehaviour
             controller.Move(Vector3.zero);
 
         if (levelBounds != null)
-            transform.position = levelBounds.ClampPointInside(transform.position);
+            transform.position = levelBounds.ClampPointInsideXZ(transform.position);
     }
 
     public void TakeDamage(float amount)

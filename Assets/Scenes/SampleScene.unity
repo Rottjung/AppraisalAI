@@ -460,7 +460,6 @@ MonoBehaviour:
   maxWaitTime: 1.5
   detectionRadius: 10
   chaseSpeed: 4
-  loseInterestDistance: 15
   maxHealth: 3
   drawGizmos: 1
 --- !u!114 &154234668
@@ -911,7 +910,6 @@ MonoBehaviour:
   maxWaitTime: 1.5
   detectionRadius: 10
   chaseSpeed: 4
-  loseInterestDistance: 15
   maxHealth: 3
   drawGizmos: 1
 --- !u!114 &462759805
@@ -1208,7 +1206,6 @@ MonoBehaviour:
   maxWaitTime: 1.5
   detectionRadius: 10
   chaseSpeed: 4
-  loseInterestDistance: 15
   maxHealth: 3
   drawGizmos: 1
 --- !u!114 &677371748
@@ -1254,7 +1251,6 @@ MonoBehaviour:
   maxWaitTime: 1.5
   detectionRadius: 10
   chaseSpeed: 4
-  loseInterestDistance: 15
   maxHealth: 3
   drawGizmos: 1
 --- !u!114 &680884788
@@ -1479,7 +1475,6 @@ MonoBehaviour:
   maxWaitTime: 1.5
   detectionRadius: 10
   chaseSpeed: 4
-  loseInterestDistance: 15
   maxHealth: 3
   drawGizmos: 1
 --- !u!114 &836277338
@@ -3254,7 +3249,6 @@ MonoBehaviour:
   maxWaitTime: 1.5
   detectionRadius: 10
   chaseSpeed: 4
-  loseInterestDistance: 15
   maxHealth: 3
   drawGizmos: 1
 --- !u!114 &1886191803
