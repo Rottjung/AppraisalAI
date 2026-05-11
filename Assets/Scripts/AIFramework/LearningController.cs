@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -226,6 +225,17 @@ public class LearningController : MonoBehaviour
                 BehaviorNode node = brain.BehaviorNodes[i];
                 if (node != null && node.IsEnabled)
                     record.AddCoordinate(new BehaviorCoordinate(node.Id, node.Value, 1f));
+            }
+
+            for (int i = 0; i < brain.Cloud.Records.Count; i++)
+            {
+                var existing = brain.Cloud.Records[i];
+                if (existing.PayloadId == activeEpisode.EpisodeTypeId && existing.Filters.Count > 0)
+                {
+                    for (int f = 0; f < existing.Filters.Count; f++)
+                        record.AddFilter(existing.Filters[f]);
+                    break;
+                }
             }
 
             brain.Cloud.AddOrMergeRecord(record, 0.3f);
