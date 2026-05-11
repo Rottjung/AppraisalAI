@@ -64,8 +64,8 @@ public class CreatureBrainController : MonoBehaviour
     [SerializeField] private float fleeEnergyDrainMultiplier = 0.05f;
     [SerializeField] private float wanderSpeed = 0.6f;
     [SerializeField] private float seekFoodSpeed = 1f;
-    [SerializeField] private float fleeBaseSpeed = 1.5f;
-    [SerializeField] private float fleeMaxSpeed = 2.5f;
+    [SerializeField] private float fleeBaseSpeed = 1.2f;
+    [SerializeField] private float fleeMaxSpeed = 2f;
     [SerializeField] private float approachSpeed = 0.5f;
 
     [Header("Episodes")]
@@ -95,6 +95,7 @@ public class CreatureBrainController : MonoBehaviour
     private float health;
     private float invincibilityTimer;
     private float attackTimer;
+    private float startingY;
 
     private void Awake()
     {
@@ -104,6 +105,7 @@ public class CreatureBrainController : MonoBehaviour
             cachedRecoveryNeed = brain.GetFeatureNode("RecoveryNeed");
         }
         health = maxHealth;
+        startingY = transform.position.y;
     }
 
     private void Start()
@@ -232,7 +234,7 @@ public class CreatureBrainController : MonoBehaviour
 
     private void CheckDeath()
     {
-        if (sensors.GetValue("energy") <= 0f || health <= 0f)
+        if (health <= 0f)
             Die();
     }
 
@@ -283,7 +285,11 @@ public class CreatureBrainController : MonoBehaviour
         learningState?.Apply("isDead", 0f, false);
 
         if (levelBounds != null)
-            transform.position = levelBounds.GetRandomPointInside();
+        {
+            Vector3 pos = levelBounds.GetRandomPointInside();
+            pos.y = startingY;
+            transform.position = pos;
+        }
 
         currentPayload = "Idle";
         hasWanderTarget = false;

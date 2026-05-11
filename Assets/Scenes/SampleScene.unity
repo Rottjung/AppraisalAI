@@ -3977,7 +3977,7 @@ MonoBehaviour:
   energyRestoreOnEat: 1
   idleChargePerSecond: 1
   idleDrainPerSecond: 0.1
-  idleEnergyGainPerSecond: 0.1
+  idleEnergyGainPerSecond: 0.2
   idleRecoveryStressPenalty: 0.5
   wanderDistance: 6
   retargetInterval: 2
