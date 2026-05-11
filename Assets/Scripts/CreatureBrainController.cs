@@ -130,11 +130,11 @@ public class CreatureBrainController : MonoBehaviour
         var attackDrive = new BehaviorNode("AttackDrive", "Attack Drive");
         attackDrive.SetActivationType(ActivationType.Sigmoid);
 
-        attackDrive.AddConnection(new Connection("enemyProximity", 1.5f));
-        attackDrive.AddConnection(new Connection("energy", 0.8f));
-        attackDrive.AddConnection(new Connection("health", 1f));
-        attackDrive.AddConnection(new Connection("hunger", 0.3f));
-        attackDrive.AddConnection(new Connection("Fear", -1f));
+        attackDrive.AddConnection(new Connection("enemyProximity", 0.5f));
+        attackDrive.AddConnection(new Connection("energy", 0.3f));
+        attackDrive.AddConnection(new Connection("health", 0.3f));
+        attackDrive.AddConnection(new Connection("hunger", 0.2f));
+        attackDrive.AddConnection(new Connection("Fear", -0.3f));
 
         brain.AddBehaviorNode(attackDrive);
 
@@ -198,6 +198,7 @@ public class CreatureBrainController : MonoBehaviour
 
         ExecuteCurrentPayload();
         UpdateIdleTime();
+        ApplyStarvationDamage(dt);
 
         if (Input.GetKeyDown(KeyCode.L))
             learningController.ToggleLog();
@@ -231,6 +232,22 @@ public class CreatureBrainController : MonoBehaviour
         learningState?.Apply("enemyKilled", 1f, true);
         if (logDecisions)
             Debug.Log("Creature killed an enemy!", this);
+    }
+
+    private void ApplyStarvationDamage(float dt)
+    {
+        if (isDead) return;
+
+        float energy = sensors.GetValue("energy");
+        if (energy > 0.01f) return;
+
+        health -= 0.05f * dt;
+        float healthNorm = Mathf.Max(0f, health / maxHealth);
+        sensors?.SetSignal("health", healthNorm);
+        brain?.SetInputRaw("health", healthNorm);
+
+        if (health <= 0f)
+            Die();
     }
 
     private void CheckDeath()
