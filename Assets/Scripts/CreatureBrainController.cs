@@ -121,8 +121,7 @@ public class CreatureBrainController : MonoBehaviour
         attackDrive.AddConnection(new Connection("energy", 0.8f));
         attackDrive.AddConnection(new Connection("hunger", 0.3f));
 
-        brain.BehaviorNodes.Add(attackDrive);
-        brain.RebuildCaches();
+        brain.AddBehaviorNode(attackDrive);
 
         var attackRecord = new BehaviorRecord("attack_record", "Attack");
         attackRecord.AddCoordinate(new BehaviorCoordinate("AttackDrive", 1f));

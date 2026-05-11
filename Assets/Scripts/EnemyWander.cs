@@ -122,9 +122,10 @@ public class EnemyWander : MonoBehaviour
 
     private void ChaseCreature()
     {
-        if (creatureTarget == null)
+        if (creatureTarget == null || creatureTarget.gameObject == null)
         {
             isChasing = false;
+            creatureTarget = null;
             return;
         }
 

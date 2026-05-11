@@ -82,6 +82,13 @@ public sealed class DecisionBrain : MonoBehaviour
         RebuildCaches();
     }
 
+    public void AddBehaviorNode(BehaviorNode node)
+    {
+        if (node == null) return;
+        behaviorNodes.Add(node);
+        RebuildCaches();
+    }
+
     [ContextMenu("Rebuild Caches")]
     public void RebuildCaches()
     {
