@@ -71,7 +71,6 @@ public class CreatureBrainController : MonoBehaviour
     [Header("Episodes")]
     [SerializeField] private int maxLifetimes = 100;
     [SerializeField] private float respawnDelay = 1f;
-    [SerializeField] private int enemyCount = 2;
 
     [Header("Debug")]
     [SerializeField] private bool logDecisions = false;
@@ -114,7 +113,6 @@ public class CreatureBrainController : MonoBehaviour
         sensors?.EnsureSignal("health", 1f);
         learningState?.EnsureSignal("enemyKilled", SignalType.Int, 0);
         SetupAttackDrive();
-        SpawnEnemies();
     }
 
     private void SetupAttackDrive()
@@ -219,12 +217,10 @@ public class CreatureBrainController : MonoBehaviour
             return;
 
         health = Mathf.Max(0f, health - amount);
+        Debug.Log($"[Damage] Creature took {amount} damage, health={health}/{maxHealth}", this);
         sensors?.SetSignal("health", health / maxHealth);
         learningState?.Apply("health", health / maxHealth, false);
         invincibilityTimer = damageInvincibilityTime;
-
-        if (logDecisions)
-            Debug.Log($"Creature took {amount} damage, health={health}/{maxHealth}", this);
     }
 
     public void OnEnemyKilled()
@@ -271,51 +267,6 @@ public class CreatureBrainController : MonoBehaviour
         deathTimer = respawnDelay;
     }
 
-    private void SpawnEnemies()
-    {
-        if (enemyCount <= 0 || levelBounds == null)
-            return;
-
-        EnemyWander sceneWanderer = FindFirstObjectByType<EnemyWander>();
-
-        var existing = FindObjectsByType<EnemyWander>(FindObjectsSortMode.None);
-        for (int i = 0; i < existing.Length; i++)
-        {
-            if (existing[i] != null && existing[i].gameObject != null)
-                DestroyImmediate(existing[i].gameObject);
-        }
-
-        for (int i = 0; i < enemyCount; i++)
-        {
-            Vector3 pos = levelBounds.GetRandomPointInside();
-            pos.y = startingY;
-
-            GameObject enemy;
-            if (sceneWanderer != null)
-            {
-                enemy = Instantiate(sceneWanderer.gameObject, pos, Quaternion.identity);
-                enemy.name = $"Enemy_{i}";
-            }
-            else
-            {
-                enemy = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                enemy.name = $"Enemy_{i}";
-                enemy.tag = "Enemy";
-                enemy.transform.position = pos;
-                DestroyImmediate(enemy.GetComponent<BoxCollider>());
-                enemy.AddComponent<CapsuleCollider>();
-                enemy.AddComponent<Rigidbody>().isKinematic = true;
-                enemy.AddComponent<WorldTarget>();
-                enemy.AddComponent<Controller>();
-                enemy.AddComponent<EnemyWander>();
-            }
-
-            var wanderer = enemy.GetComponent<EnemyWander>();
-            if (wanderer != null)
-                wanderer.SetLevelBounds(levelBounds);
-        }
-    }
-
     private void Respawn()
     {
         waitingForRespawn = false;
@@ -330,8 +281,6 @@ public class CreatureBrainController : MonoBehaviour
         sensors?.SetSignal("hunger", 0f);
         sensors?.SetSignal("idleTime", 0f);
         learningState?.Apply("isDead", 0f, false);
-
-        SpawnEnemies();
 
         if (levelBounds != null)
         {

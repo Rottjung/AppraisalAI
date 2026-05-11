@@ -12,7 +12,11 @@ public class DeadCollider : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        Debug.Log($"[DeadCollider] Hit by {collision.collider.name} tag={collision.collider.tag}", this);
         if (collision.collider.CompareTag("Enemy"))
+        {
+            Debug.Log("[DeadCollider] Enemy detected, calling TakeDamage", this);
             brain?.TakeDamage(damageAmount);
+        }
     }
 }
