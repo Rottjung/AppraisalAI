@@ -14,9 +14,9 @@ public class EnemyWander : MonoBehaviour
     [SerializeField] private float maxWaitTime = 1.5f;
 
     [Header("Pursuit")]
-    [SerializeField] private float detectionRadius = 12f;
-    [SerializeField] private float chaseSpeed = 6f;
-    [SerializeField] private float loseInterestDistance = 18f;
+    [SerializeField] private float detectionRadius = 10f;
+    [SerializeField] private float chaseSpeed = 4f;
+    [SerializeField] private float loseInterestDistance = 15f;
 
     [Header("Health")]
     [SerializeField] private float maxHealth = 3f;

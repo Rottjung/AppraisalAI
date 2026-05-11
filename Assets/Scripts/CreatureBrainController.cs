@@ -61,11 +61,11 @@ public class CreatureBrainController : MonoBehaviour
     [SerializeField] private float attackEnergyCost = 0.15f;
 
     [Header("Energy Drain")]
-    [SerializeField] private float fleeEnergyDrainMultiplier = 0.1f;
-    [SerializeField] private float wanderSpeed = 0.8f;
+    [SerializeField] private float fleeEnergyDrainMultiplier = 0.15f;
+    [SerializeField] private float wanderSpeed = 0.6f;
     [SerializeField] private float seekFoodSpeed = 1f;
-    [SerializeField] private float fleeBaseSpeed = 1.2f;
-    [SerializeField] private float fleeMaxSpeed = 2f;
+    [SerializeField] private float fleeBaseSpeed = 1.5f;
+    [SerializeField] private float fleeMaxSpeed = 2.5f;
     [SerializeField] private float approachSpeed = 0.5f;
 
     [Header("Debug")]
