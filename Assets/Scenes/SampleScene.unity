@@ -458,6 +458,10 @@ MonoBehaviour:
   reachDistance: 0.75
   minWaitTime: 0.5
   maxWaitTime: 1.5
+  detectionRadius: 10
+  chaseSpeed: 4
+  loseInterestDistance: 15
+  maxHealth: 3
   drawGizmos: 1
 --- !u!114 &154234668
 MonoBehaviour:
@@ -475,6 +479,7 @@ MonoBehaviour:
   turnSpeedDegrees: 360
   acceleration: 8
   arrow: {fileID: 1311220907}
+  speedMultiplier: 1
 --- !u!1001 &372466724
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -904,6 +909,10 @@ MonoBehaviour:
   reachDistance: 0.75
   minWaitTime: 0.5
   maxWaitTime: 1.5
+  detectionRadius: 10
+  chaseSpeed: 4
+  loseInterestDistance: 15
+  maxHealth: 3
   drawGizmos: 1
 --- !u!114 &462759805
 MonoBehaviour:
@@ -921,6 +930,7 @@ MonoBehaviour:
   turnSpeedDegrees: 360
   acceleration: 8
   arrow: {fileID: 372466725}
+  speedMultiplier: 1
 --- !u!4 &546081282 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: c8cd361d01e0d294c8e741614ef3c65b, type: 3}
@@ -1196,6 +1206,10 @@ MonoBehaviour:
   reachDistance: 0.75
   minWaitTime: 0.5
   maxWaitTime: 1.5
+  detectionRadius: 10
+  chaseSpeed: 4
+  loseInterestDistance: 15
+  maxHealth: 3
   drawGizmos: 1
 --- !u!114 &677371748
 MonoBehaviour:
@@ -1213,6 +1227,7 @@ MonoBehaviour:
   turnSpeedDegrees: 360
   acceleration: 8
   arrow: {fileID: 1309503778}
+  speedMultiplier: 1
 --- !u!1 &680884781 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3989100307310423863, guid: 3bf1de71bb6f14749b527c2cb15652fe, type: 3}
@@ -1237,6 +1252,10 @@ MonoBehaviour:
   reachDistance: 0.75
   minWaitTime: 0.5
   maxWaitTime: 1.5
+  detectionRadius: 10
+  chaseSpeed: 4
+  loseInterestDistance: 15
+  maxHealth: 3
   drawGizmos: 1
 --- !u!114 &680884788
 MonoBehaviour:
@@ -1254,6 +1273,7 @@ MonoBehaviour:
   turnSpeedDegrees: 360
   acceleration: 8
   arrow: {fileID: 1125269121}
+  speedMultiplier: 1
 --- !u!4 &680884793 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3399376044927831915, guid: 3bf1de71bb6f14749b527c2cb15652fe, type: 3}
@@ -1457,6 +1477,10 @@ MonoBehaviour:
   reachDistance: 0.75
   minWaitTime: 0.5
   maxWaitTime: 1.5
+  detectionRadius: 10
+  chaseSpeed: 4
+  loseInterestDistance: 15
+  maxHealth: 3
   drawGizmos: 1
 --- !u!114 &836277338
 MonoBehaviour:
@@ -1474,6 +1498,7 @@ MonoBehaviour:
   turnSpeedDegrees: 360
   acceleration: 8
   arrow: {fileID: 1566293562}
+  speedMultiplier: 1
 --- !u!1 &913198007
 GameObject:
   m_ObjectHideFlags: 0
@@ -2780,6 +2805,8 @@ RectTransform:
   - {fileID: 570731334}
   - {fileID: 1412933643}
   - {fileID: 1936204352}
+  - {fileID: 1620188639}
+  - {fileID: 1984509822}
   - {fileID: 1370211521}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2788,6 +2815,143 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &1620188638
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1620188639}
+  - component: {fileID: 1620188641}
+  - component: {fileID: 1620188640}
+  m_Layer: 5
+  m_Name: Healthlabel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1620188639
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1620188638}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1612784715}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 10, y: -54.3}
+  m_SizeDelta: {x: 100, y: 24}
+  m_Pivot: {x: 0, y: 1}
+--- !u!114 &1620188640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1620188638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: Health
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 24
+  m_fontSizeBase: 24
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 1
+  m_VerticalAlignment: 256
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_characterHorizontalScale: 1
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656b
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &1620188641
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1620188638}
+  m_CullTransparentMesh: 1
 --- !u!1 &1643794161
 GameObject:
   m_ObjectHideFlags: 0
@@ -3088,6 +3252,10 @@ MonoBehaviour:
   reachDistance: 0.75
   minWaitTime: 0.5
   maxWaitTime: 1.5
+  detectionRadius: 10
+  chaseSpeed: 4
+  loseInterestDistance: 15
+  maxHealth: 3
   drawGizmos: 1
 --- !u!114 &1886191803
 MonoBehaviour:
@@ -3105,6 +3273,7 @@ MonoBehaviour:
   turnSpeedDegrees: 360
   acceleration: 8
   arrow: {fileID: 1150009237}
+  speedMultiplier: 1
 --- !u!1 &1925646352
 GameObject:
   m_ObjectHideFlags: 0
@@ -3219,7 +3388,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 110, y: -45}
+  m_AnchoredPosition: {x: 110, y: -40.39998}
   m_SizeDelta: {x: 100, y: 10}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1936204353
@@ -3442,6 +3611,127 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2051618777}
   m_LocalEulerAnglesHint: {x: 37.85, y: -138.3, z: 0}
+--- !u!1 &1984509821
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1984509822}
+  - component: {fileID: 1984509825}
+  - component: {fileID: 1984509824}
+  - component: {fileID: 1984509823}
+  m_Layer: 5
+  m_Name: Health
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1984509822
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1984509821}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1612784715}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 110, y: -64.7}
+  m_SizeDelta: {x: 100, y: 10}
+  m_Pivot: {x: 0, y: 1}
+--- !u!114 &1984509823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1984509821}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53047397a3f1f184686f75050df6e117, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SurvivalBar
+  fill: {fileID: 1984509824}
+  stat: health
+  reverse: 1
+  colorGradient:
+    serializedVersion: 2
+    key0: {r: 0.39607847, g: 0.7490196, b: 0.09411766, a: 1}
+    key1: {r: 1, g: 0.7875107, b: 0, a: 1}
+    key2: {r: 1, g: 0.40573785, b: 0.020754695, a: 0}
+    key3: {r: 1, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 21627
+    ctime2: 43253
+    ctime3: 65535
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 4
+    m_NumAlphaKeys: 2
+--- !u!114 &1984509824
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1984509821}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 48f75d6024b97a44db47eadb31c7f4b0, type: 3}
+  m_Type: 3
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 0
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1984509825
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1984509821}
+  m_CullTransparentMesh: 1
 --- !u!1 &2051618769
 GameObject:
   m_ObjectHideFlags: 0
@@ -3486,6 +3776,7 @@ MonoBehaviour:
   turnSpeedDegrees: 90
   acceleration: 8
   arrow: {fileID: 546081282}
+  speedMultiplier: 1
 --- !u!114 &2051618771
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3987,6 +4278,21 @@ MonoBehaviour:
   chainFromPreviousTarget: 1
   previousTargetBias: 0.8
   minDistanceFromCurrentWhenChained: 1.5
+  explorationRate: 0.15
+  maxHealth: 3
+  damageInvincibilityTime: 1
+  attackRange: 1.5
+  attackCooldown: 0.5
+  attackDamage: 1
+  attackEnergyCost: 0.06
+  fleeEnergyDrainMultiplier: 0.05
+  wanderSpeed: 0.6
+  seekFoodSpeed: 1
+  fleeBaseSpeed: 1.2
+  fleeMaxSpeed: 2
+  approachSpeed: 0.5
+  maxLifetimes: 100
+  respawnDelay: 1
   logDecisions: 0
   drawWanderTarget: 0
 --- !u!114 &2051618773
@@ -4253,6 +4559,57 @@ MonoBehaviour:
       mode: 2
       weight: -0.5
     maxScoreMagnitudeForLearning: 3
+  - episodeTypeId: SeekFood
+    targetBehaviorIds:
+    - FoodDrive
+    rewardTerms:
+    - signalId: foodConsumed
+      mode: 2
+      weight: 2
+    - signalId: isDead
+      mode: 1
+      weight: -3
+    - signalId: energy
+      mode: 2
+      weight: 0.5
+    - signalId: health
+      mode: 2
+      weight: 0.5
+    maxScoreMagnitudeForLearning: 3
+  - episodeTypeId: FleeEnemy
+    targetBehaviorIds:
+    - Fear
+    rewardTerms:
+    - signalId: health
+      mode: 2
+      weight: 1.5
+    - signalId: isDead
+      mode: 1
+      weight: -3
+    - signalId: energy
+      mode: 2
+      weight: -0.3
+    - signalId: enemyProximity
+      mode: 1
+      weight: -1
+    maxScoreMagnitudeForLearning: 3
+  - episodeTypeId: Attack
+    targetBehaviorIds:
+    - AttackDrive
+    rewardTerms:
+    - signalId: enemyKilled
+      mode: 2
+      weight: 3
+    - signalId: health
+      mode: 2
+      weight: 0.5
+    - signalId: energy
+      mode: 2
+      weight: -0.5
+    - signalId: isDead
+      mode: 1
+      weight: -3
+    maxScoreMagnitudeForLearning: 3
   behaviorLearningRate: 0.2
   logLearning: 0
   Log: {fileID: 1551043668}
@@ -4304,6 +4661,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee8669c518c6bea4dab553c1995c8254, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeadCollider
+  damageAmount: 1
 --- !u!54 &2051618782
 Rigidbody:
   m_ObjectHideFlags: 0

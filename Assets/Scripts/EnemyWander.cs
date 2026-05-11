@@ -15,8 +15,7 @@ public class EnemyWander : MonoBehaviour
 
     [Header("Pursuit")]
     [SerializeField] private float detectionRadius = 10f;
-    [SerializeField] private float chaseSpeed = 4f;
-    [SerializeField] private float loseInterestDistance = 15f;
+    [SerializeField] private float chaseSpeed = 6f;
 
     [Header("Health")]
     [SerializeField] private float maxHealth = 3f;
@@ -100,16 +99,7 @@ public class EnemyWander : MonoBehaviour
         float dist = Vector3.Distance(transform.position, creature.transform.position);
 
         if (isChasing)
-        {
-            if (dist > loseInterestDistance)
-            {
-                isChasing = false;
-                creatureTarget = null;
-                controller.Speed = defaultSpeed;
-                PickNewTarget();
-            }
             return;
-        }
 
         if (dist <= detectionRadius)
         {
@@ -163,6 +153,11 @@ public class EnemyWander : MonoBehaviour
 
         currentTarget = levelBounds.ClampPointInside(currentTarget);
         hasTarget = true;
+    }
+
+    public void SetLevelBounds(LevelBounds bounds)
+    {
+        levelBounds = bounds;
     }
 
     public Vector3 GetCurrentTarget()
