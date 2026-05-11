@@ -15,6 +15,18 @@ public class Controller : MonoBehaviour
     private Vector3 currentDirection = Vector3.forward;
     private float currentMoveStrength = 0f;
     private bool isMoving = true;
+    private Rigidbody rb;
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            rb = gameObject.AddComponent<Rigidbody>();
+            rb.isKinematic = true;
+            rb.useGravity = false;
+        }
+    }
 
     public void Move(Vector3 direction)
     {
@@ -35,7 +47,7 @@ public class Controller : MonoBehaviour
         }
 
         Vector3 velocity = currentDirection * speed * speedMultiplier * currentMoveStrength;
-        transform.position += velocity * Time.deltaTime;
+        rb.MovePosition(rb.position + velocity * Time.deltaTime);
 
         if (arrow && currentDirection.sqrMagnitude > 0.0001f)
         {

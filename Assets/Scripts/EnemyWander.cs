@@ -37,12 +37,6 @@ public class EnemyWander : MonoBehaviour
             controller = GetComponent<Controller>();
         defaultSpeed = controller.Speed;
         health = maxHealth;
-
-        var rb = GetComponent<Rigidbody>();
-        if (rb == null)
-            rb = gameObject.AddComponent<Rigidbody>();
-        rb.isKinematic = true;
-        rb.useGravity = false;
     }
 
     private void Start()
