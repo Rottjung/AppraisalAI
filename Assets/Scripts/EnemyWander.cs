@@ -13,28 +13,47 @@ public class EnemyWander : MonoBehaviour
     [SerializeField] private float minWaitTime = 0.5f;
     [SerializeField] private float maxWaitTime = 1.5f;
 
+    [Header("Pursuit")]
+    [SerializeField] private float detectionRadius = 12f;
+    [SerializeField] private float chaseSpeed = 6f;
+    [SerializeField] private float loseInterestDistance = 18f;
+
     [Header("Debug")]
     [SerializeField] private bool drawGizmos = true;
 
     private Vector3 currentTarget;
     private bool hasTarget;
     private float waitTimer;
+    private Transform creatureTarget;
+    private bool isChasing;
+    private float defaultSpeed;
 
     private void Awake()
     {
         if (controller == null)
             controller = GetComponent<Controller>();
+        defaultSpeed = controller.Speed;
     }
 
     private void Start()
     {
-        PickNewTarget();
+        FindCreature();
+        if (!isChasing)
+            PickNewTarget();
     }
 
     private void Update()
     {
         if (controller == null || levelBounds == null)
             return;
+
+        FindCreature();
+
+        if (isChasing)
+        {
+            ChaseCreature();
+            return;
+        }
 
         if (!hasTarget)
         {
@@ -63,6 +82,54 @@ public class EnemyWander : MonoBehaviour
         controller.Move(direction);
     }
 
+    private void FindCreature()
+    {
+        CreatureBrainController creature = FindFirstObjectByType<CreatureBrainController>();
+        if (creature == null)
+        {
+            isChasing = false;
+            creatureTarget = null;
+            return;
+        }
+
+        float dist = Vector3.Distance(transform.position, creature.transform.position);
+
+        if (isChasing)
+        {
+            if (dist > loseInterestDistance)
+            {
+                isChasing = false;
+                creatureTarget = null;
+                controller.Speed = defaultSpeed;
+                PickNewTarget();
+            }
+            return;
+        }
+
+        if (dist <= detectionRadius)
+        {
+            creatureTarget = creature.transform;
+            isChasing = true;
+            controller.Speed = chaseSpeed;
+            hasTarget = false;
+        }
+    }
+
+    private void ChaseCreature()
+    {
+        if (creatureTarget == null)
+        {
+            isChasing = false;
+            return;
+        }
+
+        Vector3 dir = MathUtil.DirectionXZ(transform.position, creatureTarget.position);
+        if (dir.sqrMagnitude > 0.0001f)
+            controller.Move(dir);
+        else
+            controller.Move(Vector3.zero);
+    }
+
     private void PickNewTarget()
     {
         Bounds bounds = levelBounds.GetWorldBounds();
@@ -88,14 +155,20 @@ public class EnemyWander : MonoBehaviour
         if (!drawGizmos)
             return;
 
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, wanderRadius);
+        Gizmos.color = isChasing ? Color.red : Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, isChasing ? detectionRadius : wanderRadius);
 
-        if (hasTarget)
+        Gizmos.color = Color.yellow;
+        if (hasTarget && !isChasing)
         {
-            Gizmos.color = Color.red;
             Gizmos.DrawSphere(currentTarget, 0.2f);
             Gizmos.DrawLine(transform.position, currentTarget);
+        }
+
+        if (isChasing && creatureTarget != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(transform.position, creatureTarget.position);
         }
     }
 }

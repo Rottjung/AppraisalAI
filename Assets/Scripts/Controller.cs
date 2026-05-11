@@ -6,6 +6,7 @@ public class Controller : MonoBehaviour
     [SerializeField] private float turnSpeedDegrees = 360f; // degrees per second
     [SerializeField] private float acceleration = 8f;       // how fast movement strength ramps up/down
     [SerializeField] private Transform arrow;
+    public float Speed { get => speed; set => speed = value; }
     public bool IsMoving => isMoving;
 
     private Vector3 currentDirection = Vector3.forward;

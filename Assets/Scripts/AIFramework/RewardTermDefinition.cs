@@ -19,4 +19,13 @@ public sealed class RewardTermDefinition
     public string SignalId => signalId;
     public RewardEvaluationMode Mode => mode;
     public float Weight => weight;
+
+    public RewardTermDefinition() { }
+
+    public RewardTermDefinition(string signalId, RewardEvaluationMode mode, float weight = 1f)
+    {
+        this.signalId = signalId;
+        this.mode = mode;
+        this.weight = weight;
+    }
 }

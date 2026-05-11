@@ -30,7 +30,28 @@ public static class DecisionFilter
         return null;
     }
 
-    private static bool IsValid(BehaviorRecord record, Sensors sensors)
+    public static RetrievalCandidate SelectRandomValid(
+        List<RetrievalCandidate> candidates,
+        Sensors sensors)
+    {
+        if (candidates == null || candidates.Count == 0)
+            return null;
+
+        var valid = new List<RetrievalCandidate>();
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            RetrievalCandidate candidate = candidates[i];
+            if (candidate != null && candidate.Record != null && IsValid(candidate.Record, sensors))
+                valid.Add(candidate);
+        }
+
+        if (valid.Count == 0)
+            return null;
+
+        return valid[UnityEngine.Random.Range(0, valid.Count)];
+    }
+
+    public static bool IsValid(BehaviorRecord record, Sensors sensors)
     {
         if (record == null || sensors == null)
             return true;

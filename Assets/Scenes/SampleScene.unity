@@ -150,8 +150,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FoodSpawner
   foodPrefab: {fileID: 7023945570786287689, guid: 726411030141bc347bcce1787c11c869, type: 3}
   levelBounds: {fileID: 1134956020}
-  spawnInterval: 4
-  maxFood: 10
+  spawnInterval: 8
+  maxFood: 8
   spawnRadius: 20
   minDistance: 10
   chainFromPrevious: 0
@@ -3619,43 +3619,43 @@ MonoBehaviour:
       isEnabled: 1
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: foodProximity
       weight: 0.7
       isEnabled: 1
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: energy
       weight: 0.2
       isEnabled: 1
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: enemyProximity
       weight: -0.9
       isEnabled: 1
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: recentEnemyThreat
       weight: -0.75
       isEnabled: 1
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: MetabolicStress
       weight: 0.5
       isEnabled: 1
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: bias
       weight: 0
       isEnabled: 1
@@ -3681,17 +3681,17 @@ MonoBehaviour:
     - sourceNodeId: enemyProximity
       weight: 1
       isEnabled: 1
-      isLearnable: 0
+      isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: 0
-      maxEffectiveWeight: 0
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: energy
       weight: -0.3
       isEnabled: 1
-      isLearnable: 0
+      isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: 0
-      maxEffectiveWeight: 0
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: hunger
       weight: 0.5
       isEnabled: 1
@@ -3733,15 +3733,15 @@ MonoBehaviour:
       isEnabled: 1
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: hunger
       weight: 1
       isEnabled: 1
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: foodProximity
       weight: -0.4
       isEnabled: 1
@@ -3754,29 +3754,29 @@ MonoBehaviour:
       isEnabled: 0
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: RecoveryNeed
       weight: -1.1
       isEnabled: 1
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: enemyOnWanderPath
       weight: -0.5
       isEnabled: 1
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: recentEnemyThreat
       weight: -0.1
       isEnabled: 1
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: bias
       weight: 0
       isEnabled: 1
@@ -3797,22 +3797,22 @@ MonoBehaviour:
       isEnabled: 1
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: enemyOnWanderPath
       weight: 1.6
       isEnabled: 1
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: recentEnemyThreat
       weight: 0.9
       isEnabled: 1
       isLearnable: 0
       learnedOffset: 0
-      minEffectiveWeight: -0.75
-      maxEffectiveWeight: 0.75
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: foodProximity
       weight: -0.5
       isEnabled: 1
@@ -4024,6 +4024,9 @@ MonoBehaviour:
   - id: wanderTargetEnemyDistance
     type: 0
     value: 0
+  - id: health
+    type: 0
+    value: 1
   sensorModules:
   - signalId: hunger
     type: 3
@@ -4286,6 +4289,9 @@ MonoBehaviour:
   - id: isDead
     type: 2
     value: 0
+  - id: health
+    type: 0
+    value: 1
 --- !u!114 &2051618781
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -34,12 +34,14 @@ public class LearningController : MonoBehaviour
     {
         RebuildProviders();
         RebuildLookup();
+        EnsureDefaultEpisodes();
     }
 
     private void OnValidate()
     {
         RebuildProviders();
         RebuildLookup();
+        EnsureDefaultEpisodes();
     }
 
     private void RebuildProviders()
@@ -66,6 +68,43 @@ public class LearningController : MonoBehaviour
             {
                 episodeLookup[def.EpisodeTypeId] = def;
             }
+        }
+    }
+
+    private void EnsureDefaultEpisodes()
+    {
+        if (!episodeLookup.ContainsKey("SeekFood"))
+        {
+            var def = new LearningEpisodeDefinition();
+            def.Initialize("SeekFood",
+                new List<string> { "FoodDrive" },
+                new List<RewardTermDefinition>
+                {
+                    new RewardTermDefinition("foodConsumed", RewardEvaluationMode.Delta, 2f),
+                    new RewardTermDefinition("isDead", RewardEvaluationMode.EndValue, -3f),
+                    new RewardTermDefinition("energy", RewardEvaluationMode.Delta, 0.5f),
+                    new RewardTermDefinition("health", RewardEvaluationMode.Delta, 0.5f),
+                },
+                3f);
+            episodeDefinitions.Add(def);
+            episodeLookup["SeekFood"] = def;
+        }
+
+        if (!episodeLookup.ContainsKey("FleeEnemy"))
+        {
+            var def = new LearningEpisodeDefinition();
+            def.Initialize("FleeEnemy",
+                new List<string> { "Fear" },
+                new List<RewardTermDefinition>
+                {
+                    new RewardTermDefinition("health", RewardEvaluationMode.Delta, 1.5f),
+                    new RewardTermDefinition("isDead", RewardEvaluationMode.EndValue, -3f),
+                    new RewardTermDefinition("energy", RewardEvaluationMode.Delta, -0.3f),
+                    new RewardTermDefinition("enemyProximity", RewardEvaluationMode.EndValue, -1f),
+                },
+                3f);
+            episodeDefinitions.Add(def);
+            episodeLookup["FleeEnemy"] = def;
         }
     }
 

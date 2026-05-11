@@ -1,9 +1,8 @@
-using System;
 using UnityEngine;
 
 public class DeadCollider : MonoBehaviour
 {
-    public Action OnDead;
+    [SerializeField] private float damageAmount = 1f;
     private CreatureBrainController brain;
 
     private void Awake()
@@ -11,19 +10,9 @@ public class DeadCollider : MonoBehaviour
         brain = GetComponent<CreatureBrainController>();
     }
 
-    private void OnEnable()
-    {
-        OnDead += brain.Die;
-    }
-
-    private void OnDisable()
-    {
-        OnDead -= brain.Die;
-    }
-
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.collider.CompareTag("Enemy"))
-            OnDead?.Invoke();
+            brain?.TakeDamage(damageAmount);
     }
 }

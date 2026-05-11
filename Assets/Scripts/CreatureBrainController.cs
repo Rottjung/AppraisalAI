@@ -47,6 +47,13 @@ public class CreatureBrainController : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float previousTargetBias = 0.8f;
     [SerializeField] private float minDistanceFromCurrentWhenChained = 1.5f;
 
+    [Header("Exploration")]
+    [SerializeField, Range(0f, 1f)] private float explorationRate = 0.15f;
+
+    [Header("Health")]
+    [SerializeField] private float maxHealth = 3f;
+    [SerializeField] private float damageInvincibilityTime = 1f;
+
     [Header("Debug")]
     [SerializeField] private bool logDecisions = false;
     [SerializeField] private bool drawWanderTarget = true;
@@ -59,10 +66,13 @@ public class CreatureBrainController : MonoBehaviour
     private bool hasWanderTarget;
 
     private bool isDead;
-    private bool wanderEpisodeActive;
+    private string activeEpisodeType;
 
     private FeatureNode cachedMetabolicStress;
     private FeatureNode cachedRecoveryNeed;
+
+    private float health;
+    private float invincibilityTimer;
 
     private void Awake()
     {
@@ -71,6 +81,12 @@ public class CreatureBrainController : MonoBehaviour
             cachedMetabolicStress = brain.GetFeatureNode("MetabolicStress");
             cachedRecoveryNeed = brain.GetFeatureNode("RecoveryNeed");
         }
+        health = maxHealth;
+    }
+
+    private void Start()
+    {
+        sensors?.EnsureSignal("health", 1f);
     }
 
     private void Update()
@@ -81,6 +97,9 @@ public class CreatureBrainController : MonoBehaviour
         }
 
         float dt = Time.deltaTime;
+
+        if (invincibilityTimer > 0f)
+            invincibilityTimer -= dt;
 
         if (isDead)
         {
@@ -122,9 +141,23 @@ public class CreatureBrainController : MonoBehaviour
         return cachedRecoveryNeed != null ? Mathf.Clamp01(cachedRecoveryNeed.Value) : 0f;
     }
 
+    public void TakeDamage(float amount)
+    {
+        if (invincibilityTimer > 0f || isDead)
+            return;
+
+        health = Mathf.Max(0f, health - amount);
+        sensors?.SetSignal("health", health / maxHealth);
+        learningState?.Apply("health", health / maxHealth, false);
+        invincibilityTimer = damageInvincibilityTime;
+
+        if (logDecisions)
+            Debug.Log($"Creature took {amount} damage, health={health}/{maxHealth}", this);
+    }
+
     private void CheckDeath()
     {
-        if (sensors.GetValue("energy") <= 0f)
+        if (sensors.GetValue("energy") <= 0f || health <= 0f)
         {
             Die();
         }
@@ -134,11 +167,7 @@ public class CreatureBrainController : MonoBehaviour
     {
         learningState?.Apply("isDead", 1f, false);
 
-        if (wanderEpisodeActive && learningController != null)
-        {
-            learningController.EndEpisode();
-            wanderEpisodeActive = false;
-        }
+        EndActiveEpisode();
 
         isDead = true;
         currentPayload = "Dead";
@@ -163,13 +192,28 @@ public class CreatureBrainController : MonoBehaviour
         sensors.Sense();
         brain.EvaluateAll();
 
-        if (wanderEpisodeActive && learningController != null)
-        {
-            learningController.RecordStep();
-        }
+        RecordStepForActiveEpisode();
 
         List<RetrievalCandidate> candidates = brain.QueryCloudCandidates();
-        RetrievalCandidate result = DecisionFilter.SelectFirstValid(candidates, sensors);
+        RetrievalCandidate result;
+
+        if (explorationRate > 0f && Random.value < explorationRate)
+        {
+            result = DecisionFilter.SelectRandomValid(candidates, sensors);
+        }
+        else
+        {
+            result = DecisionFilter.SelectFirstValid(candidates, sensors);
+        }
+
+        if (result == null)
+        {
+            debugText.text = "Idle";
+            if (currentPayload != "Idle")
+                OnPayloadChanged(currentPayload, "Idle");
+            currentPayload = "Idle";
+            return;
+        }
 
         string proposedPayload = result.Record.PayloadId ?? "Idle";
         debugText.text = proposedPayload;
@@ -189,6 +233,12 @@ public class CreatureBrainController : MonoBehaviour
         currentPayload = proposedPayload;
     }
 
+    private void RecordStepForActiveEpisode()
+    {
+        if (activeEpisodeType != null && learningController != null)
+            learningController.RecordStep();
+    }
+
     private void UpdateIdleTime()
     {
         if (currentPayload == "Idle")
@@ -201,17 +251,18 @@ public class CreatureBrainController : MonoBehaviour
         }
     }
 
+    private void EndActiveEpisode()
+    {
+        if (activeEpisodeType != null && learningController != null)
+        {
+            learningController.EndEpisode();
+            activeEpisodeType = null;
+        }
+    }
+
     private void OnPayloadChanged(string previousPayload, string nextPayload)
     {
-        if (previousPayload == "Wander" && nextPayload != "Wander")
-        {
-            if (wanderEpisodeActive && learningController != null)
-            {
-                learningController.EndEpisode();
-            }
-
-            wanderEpisodeActive = false;
-        }
+        EndActiveEpisode();
 
         if (nextPayload == "FleeEnemy")
         {
@@ -221,26 +272,33 @@ public class CreatureBrainController : MonoBehaviour
 
         if (nextPayload == "Wander")
         {
-            if (!wanderEpisodeActive)
-            {
-                wanderEpisodeActive = true;
-
-                if (learningController != null)
-                {
-                    learningController.BeginEpisode("Wander");
-                }
-            }
-
             if (!hasWanderTarget)
-            {
                 PickNewWanderTarget();
-            }
-
             wanderRetargetTimer = retargetInterval;
         }
-        else if (nextPayload == "Idle")
+        else if (nextPayload == "Idle" || nextPayload == "Dead")
         {
-            controller.Stop();
+            if (nextPayload == "Idle")
+                controller.Stop();
+            return;
+        }
+
+        BeginEpisodeFor(nextPayload);
+    }
+
+    private void BeginEpisodeFor(string payload)
+    {
+        if (learningController == null)
+            return;
+
+        switch (payload)
+        {
+            case "Wander":
+            case "SeekFood":
+            case "FleeEnemy":
+                learningController.BeginEpisode(payload);
+                activeEpisodeType = payload;
+                break;
         }
     }
 
@@ -365,6 +423,7 @@ public class CreatureBrainController : MonoBehaviour
         PickNewWanderTarget();
         wanderRetargetTimer = retargetInterval;
         currentPayload = "Wander";
+        BeginEpisodeFor("Wander");
     }
 
     private void Idle()
