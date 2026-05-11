@@ -124,25 +124,26 @@ public class CreatureBrainController : MonoBehaviour
         if (brain.GetBehaviorNode("AttackDrive") != null)
             return;
 
+        if (brain.GetInputNode("health") == null)
+            brain.AddInputNode(new InputNode("health", "Health", InputValueType.Float, 0f, 1f));
+
         var attackDrive = new BehaviorNode("AttackDrive", "Attack Drive");
         attackDrive.SetActivationType(ActivationType.Sigmoid);
 
         attackDrive.AddConnection(new Connection("enemyProximity", 1.5f));
         attackDrive.AddConnection(new Connection("energy", 0.8f));
+        attackDrive.AddConnection(new Connection("health", 1f));
         attackDrive.AddConnection(new Connection("hunger", 0.3f));
+        attackDrive.AddConnection(new Connection("Fear", -1f));
 
         brain.AddBehaviorNode(attackDrive);
 
         var attackRecord = new BehaviorRecord("attack_record", "Attack");
         attackRecord.AddCoordinate(new BehaviorCoordinate("AttackDrive", 1f));
         attackRecord.AddCoordinate(new BehaviorCoordinate("FoodDrive", 0f));
-        attackRecord.AddCoordinate(new BehaviorCoordinate("Fear", 0.3f));
+        attackRecord.AddCoordinate(new BehaviorCoordinate("Fear", 0.5f));
         attackRecord.AddCoordinate(new BehaviorCoordinate("WanderDrive", 0f));
         attackRecord.AddCoordinate(new BehaviorCoordinate("RepickDrive", 0f));
-        attackRecord.AddFilter(new PayloadFilter
-            { signalId = "enemyProximity", comparison = ComparisonType.Greater, value = 0f });
-        attackRecord.AddFilter(new PayloadFilter
-            { signalId = "energy", comparison = ComparisonType.Greater, value = 0.2f });
 
         brain.Cloud.AddRecord(attackRecord);
     }
@@ -221,6 +222,7 @@ public class CreatureBrainController : MonoBehaviour
         Debug.Log($"[Damage] Creature took {amount} damage, health={health}/{maxHealth}", this);
         sensors?.SetSignal("health", health / maxHealth);
         learningState?.Apply("health", health / maxHealth, false);
+        brain?.SetInputRaw("health", health / maxHealth);
         invincibilityTimer = damageInvincibilityTime;
     }
 
@@ -278,6 +280,7 @@ public class CreatureBrainController : MonoBehaviour
         decisionTimer = 0f;
 
         sensors?.SetSignal("health", 1f);
+        brain?.SetInputRaw("health", 1f);
         sensors?.SetSignal("energy", 1f);
         sensors?.SetSignal("hunger", 0f);
         sensors?.SetSignal("idleTime", 0f);

@@ -82,6 +82,13 @@ public sealed class DecisionBrain : MonoBehaviour
         RebuildCaches();
     }
 
+    public void AddInputNode(InputNode node)
+    {
+        if (node == null) return;
+        inputNodes.Add(node);
+        RebuildCaches();
+    }
+
     public void AddBehaviorNode(BehaviorNode node)
     {
         if (node == null) return;
