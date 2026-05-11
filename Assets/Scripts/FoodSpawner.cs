@@ -1,20 +1,18 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class Spawner : MonoBehaviour
+public class FoodSpawner : MonoBehaviour
 {
-    [SerializeField] private GameObject prefab;
+    [SerializeField] private GameObject foodPrefab;
     [SerializeField] private LevelBounds levelBounds;
 
     [Header("Spawn Timing")]
     [SerializeField] private float spawnInterval = 4f;
 
     [Header("Spawn Rules")]
-    [SerializeField] private int maxAmount = 25;
+    [SerializeField] private int maxFood = 25;
     [SerializeField] private float spawnRadius = 6f;
     [SerializeField] private float minDistance = 2f;
-    [SerializeField] private float YOffset = 0.5f;
-
 
     [Header("Scatter")]
     [SerializeField] private bool chainFromPrevious = true;
@@ -22,11 +20,11 @@ public class Spawner : MonoBehaviour
     private float timer;
     private Vector3? previousSpawnPoint;
 
-    private readonly List<GameObject> activeObjects = new();
+    private readonly List<GameObject> activeFood = new();
 
     private void Update()
     {
-        if (prefab == null || levelBounds == null)
+        if (foodPrefab == null || levelBounds == null)
             return;
 
         timer -= Time.deltaTime;
@@ -37,14 +35,14 @@ public class Spawner : MonoBehaviour
 
             CleanupList();
 
-            if (activeObjects.Count < maxAmount)
+            if (activeFood.Count < maxFood)
             {
-                Spawn();
+                SpawnFood();
             }
         }
     }
 
-    private void Spawn()
+    private void SpawnFood()
     {
         Bounds bounds = levelBounds.GetWorldBounds();
 
@@ -64,21 +62,21 @@ public class Spawner : MonoBehaviour
             spawnPoint = MathUtil.RandomPointInBounds(bounds);
         }
 
-        spawnPoint = levelBounds.ClampPointInside(spawnPoint) + new Vector3(0, YOffset, 0);
+        spawnPoint = levelBounds.ClampPointInside(spawnPoint);
 
-        GameObject food = Instantiate(prefab, spawnPoint, Quaternion.identity);
-        activeObjects.Add(food);
+        GameObject food = Instantiate(foodPrefab, spawnPoint, Quaternion.identity);
+        activeFood.Add(food);
 
         previousSpawnPoint = spawnPoint;
     }
 
     private void CleanupList()
     {
-        for (int i = activeObjects.Count - 1; i >= 0; i--)
+        for (int i = activeFood.Count - 1; i >= 0; i--)
         {
-            if (activeObjects[i] == null)
+            if (activeFood[i] == null)
             {
-                activeObjects.RemoveAt(i);
+                activeFood.RemoveAt(i);
             }
         }
     }
