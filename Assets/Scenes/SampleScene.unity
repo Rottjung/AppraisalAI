@@ -147,8 +147,8 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 456415016f89db74b9fb7575b01317a8, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FoodSpawner
-  prefab: {fileID: 7023945570786287689, guid: 726411030141bc347bcce1787c11c869, type: 3}
+  m_EditorClassIdentifier: Assembly-CSharp::Spawner
+  prefab: {fileID: 0}
   levelBounds: {fileID: 1134956020}
   spawnInterval: 8
   maxAmount: 25
@@ -944,7 +944,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: e7e690e6f1ff3904aaf76b503ca82b06, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1874,14 +1874,14 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 456415016f89db74b9fb7575b01317a8, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FoodSpawner
-  prefab: {fileID: 3989100307310423863, guid: 3bf1de71bb6f14749b527c2cb15652fe, type: 3}
+  m_EditorClassIdentifier: Assembly-CSharp::Spawner
+  prefab: {fileID: 0}
   levelBounds: {fileID: 1134956020}
   spawnInterval: 3
-  maxAmount: 10
+  maxAmount: 25
   spawnRadius: 20
   minDistance: 10
-  YOffset: 1
+  YOffset: 0.5
   chainFromPrevious: 0
 --- !u!4 &1640194796
 Transform:
@@ -3089,6 +3089,7 @@ MonoBehaviour:
   fleeMaxSpeed: 2
   approachSpeed: 0.5
   fleeDistance: 15
+  healRate: 0.02
   maxLifetimes: 100
   respawnDelay: 1
   logDecisions: 0
