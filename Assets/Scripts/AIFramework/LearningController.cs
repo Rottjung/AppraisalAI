@@ -215,6 +215,22 @@ public class LearningController : MonoBehaviour
             ApplyTrace(node, normalized);
         }
 
+        if (normalized > 0f && brain != null)
+        {
+            var record = new BehaviorRecord(
+                $"learned_{Time.frameCount}_{Random.Range(0, 9999)}",
+                activeEpisode.EpisodeTypeId);
+
+            for (int i = 0; i < brain.BehaviorNodes.Count; i++)
+            {
+                BehaviorNode node = brain.BehaviorNodes[i];
+                if (node != null && node.IsEnabled)
+                    record.AddCoordinate(new BehaviorCoordinate(node.Id, node.Value, 1f));
+            }
+
+            brain.Cloud.AddOrMergeRecord(record, 0.3f);
+        }
+
         if (logLearning)
         {
             Log.text += $"\nEnd Episode: {activeEpisode.EpisodeTypeId} score={rawScore:F2}";

@@ -19,6 +19,37 @@ public sealed class BehaviorCloud
         records.Add(record);
     }
 
+    public void AddOrMergeRecord(BehaviorRecord candidate, float mergeThreshold)
+    {
+        if (candidate == null)
+            return;
+
+        BehaviorRecord nearest = null;
+        float nearestDist = float.MaxValue;
+
+        for (int i = 0; i < records.Count; i++)
+        {
+            if (records[i] == null || records[i].PayloadId != candidate.PayloadId)
+                continue;
+
+            float dist = records[i].DistanceToRecord(candidate);
+            if (dist < nearestDist)
+            {
+                nearestDist = dist;
+                nearest = records[i];
+            }
+        }
+
+        if (nearest != null && nearestDist <= mergeThreshold)
+        {
+            nearest.MergeWith(candidate, Mathf.Clamp01(1f - nearestDist / mergeThreshold));
+        }
+        else
+        {
+            records.Add(candidate);
+        }
+    }
+
     public void Clear()
     {
         records.Clear();
