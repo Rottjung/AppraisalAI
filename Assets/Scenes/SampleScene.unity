@@ -4236,6 +4236,28 @@ MonoBehaviour:
       - signalId: recentEnemyThreat
         comparison: 0
         value: 1
+    - id: attack_enemy_record
+      payloadId: Attack
+      coordinates:
+      - behaviorNodeId: AttackDrive
+        value: 1
+        weight: 1
+      - behaviorNodeId: FoodDrive
+        value: 0
+        weight: 1
+      - behaviorNodeId: Fear
+        value: 0.5
+        weight: 1
+      - behaviorNodeId: WanderDrive
+        value: 0
+        weight: 1
+      - behaviorNodeId: RepickDrive
+        value: 0
+        weight: 1
+      filters:
+      - signalId: enemyProximity
+        comparison: 2
+        value: 0
 --- !u!114 &2051618772
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4285,10 +4307,11 @@ MonoBehaviour:
   fleeBaseSpeed: 1.2
   fleeMaxSpeed: 2
   approachSpeed: 0.5
+  fleeDistance: 15
   maxLifetimes: 100
   respawnDelay: 1
   logDecisions: 0
-  drawWanderTarget: 0
+  drawMoveTarget: 1
 --- !u!114 &2051618773
 MonoBehaviour:
   m_ObjectHideFlags: 0

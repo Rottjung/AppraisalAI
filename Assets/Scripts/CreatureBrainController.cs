@@ -137,17 +137,6 @@ public class CreatureBrainController : MonoBehaviour
         attackDrive.AddConnection(new Connection("Fear", -0.3f));
 
         brain.AddBehaviorNode(attackDrive);
-
-        var attackRecord = new BehaviorRecord("attack_record", "Attack");
-        attackRecord.AddCoordinate(new BehaviorCoordinate("AttackDrive", 1f));
-        attackRecord.AddCoordinate(new BehaviorCoordinate("FoodDrive", 0f));
-        attackRecord.AddCoordinate(new BehaviorCoordinate("Fear", 0.5f));
-        attackRecord.AddCoordinate(new BehaviorCoordinate("WanderDrive", 0f));
-        attackRecord.AddCoordinate(new BehaviorCoordinate("RepickDrive", 0f));
-        attackRecord.AddFilter(new PayloadFilter
-            { signalId = "enemyProximity", comparison = ComparisonType.Greater, value = 0f });
-
-        brain.Cloud.AddRecord(attackRecord);
     }
 
     private void Update()
