@@ -363,13 +363,20 @@ public class CreatureBrainController : MonoBehaviour
 
         RecordStepForActiveEpisode();
 
-        List<RetrievalCandidate> candidates = brain.QueryCloudCandidates();
-        RetrievalCandidate result;
+        // True epsilon-greedy: explore by picking a random payload directly
+        if (explorationRate > 0f && Random.value < explorationRate && randomPayloads.Length > 0)
+        {
+            string explorePayload = randomPayloads[Random.Range(0, randomPayloads.Length)];
+            debugText.text = explorePayload;
+            if (currentPayload != explorePayload)
+                OnPayloadChanged(currentPayload, explorePayload);
+            currentPayload = explorePayload;
+            return;
+        }
 
-        if (explorationRate > 0f && Random.value < explorationRate)
-            result = DecisionFilter.SelectRandomValid(candidates, sensors);
-        else
-            result = DecisionFilter.SelectFirstValid(candidates, sensors);
+        // Exploit: pick nearest valid cloud record
+        List<RetrievalCandidate> candidates = brain.QueryCloudCandidates();
+        RetrievalCandidate result = DecisionFilter.SelectFirstValid(candidates, sensors);
 
         if (result == null)
         {

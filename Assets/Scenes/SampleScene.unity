@@ -2934,10 +2934,6 @@ MonoBehaviour:
       - behaviorNodeId: AttackDrive
         value: 0
         weight: 1
-      filters:
-      - signalId: foodProximity
-        comparison: 2
-        value: 0
     - id: flee_enemy_record
       payloadId: FleeEnemy
       coordinates:
@@ -2956,10 +2952,6 @@ MonoBehaviour:
       - behaviorNodeId: AttackDrive
         value: 0
         weight: 1
-      filters:
-      - signalId: enemyProximity
-        comparison: 2
-        value: 0
     - id: idle_record
       payloadId: Idle
       coordinates:
@@ -2978,13 +2970,6 @@ MonoBehaviour:
       - behaviorNodeId: AttackDrive
         value: 0
         weight: 1
-      filters:
-      - signalId: idleTime
-        comparison: 4
-        value: 1
-      - signalId: energy
-        comparison: 4
-        value: 0.5
     - id: wander_record
       payloadId: Wander
       coordinates:
@@ -3003,13 +2988,6 @@ MonoBehaviour:
       - behaviorNodeId: AttackDrive
         value: 0
         weight: 1
-      filters:
-      - signalId: foodProximity
-        comparison: 5
-        value: 0
-      - signalId: enemyProximity
-        comparison: 5
-        value: 0
     - id: repick_target_record
       payloadId: RepickTarget
       coordinates:
@@ -3028,10 +3006,6 @@ MonoBehaviour:
       - behaviorNodeId: AttackDrive
         value: 0
         weight: 1
-      filters:
-      - signalId: recentEnemyThreat
-        comparison: 0
-        value: 1
     - id: attack_enemy_record
       payloadId: Attack
       coordinates:
@@ -3050,10 +3024,6 @@ MonoBehaviour:
       - behaviorNodeId: RepickDrive
         value: 0
         weight: 1
-      filters:
-      - signalId: enemyProximity
-        comparison: 2
-        value: 0
     maxRecords: 50
   saveOnQuit: 1
   saveTarget: {fileID: 11400000, guid: 61b572d3cd902c44f9e53eb412c4db2a, type: 2}
