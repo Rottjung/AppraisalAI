@@ -3056,8 +3056,8 @@ MonoBehaviour:
         value: 0
     maxRecords: 50
   saveOnQuit: 1
-  saveTarget: {fileID: 11400000, guid: 131d477e08f8a6d478523c6a64f56b5c, type: 2}
-  loadSource: {fileID: 11400000, guid: 131d477e08f8a6d478523c6a64f56b5c, type: 2}
+  saveTarget: {fileID: 11400000, guid: 61b572d3cd902c44f9e53eb412c4db2a, type: 2}
+  loadSource: {fileID: 11400000, guid: 61b572d3cd902c44f9e53eb412c4db2a, type: 2}
 --- !u!114 &2051618772
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -49,6 +49,7 @@ public class CreatureBrainController : MonoBehaviour
 
     [Header("Exploration")]
     [SerializeField, Range(0f, 1f)] private float explorationRate = 0.15f;
+    [SerializeField] private string[] randomPayloads = new[] { "Wander", "SeekFood", "FleeEnemy", "Attack" };
 
     [Header("Health")]
     [SerializeField] private float maxHealth = 3f;
@@ -372,10 +373,13 @@ public class CreatureBrainController : MonoBehaviour
 
         if (result == null)
         {
-            debugText.text = "Idle";
-            if (currentPayload != "Idle")
-                OnPayloadChanged(currentPayload, "Idle");
-            currentPayload = "Idle";
+            string fallback = "Idle";
+            if (randomPayloads.Length > 0)
+                fallback = randomPayloads[Random.Range(0, randomPayloads.Length)];
+            debugText.text = fallback;
+            if (currentPayload != fallback)
+                OnPayloadChanged(currentPayload, fallback);
+            currentPayload = fallback;
             return;
         }
 
