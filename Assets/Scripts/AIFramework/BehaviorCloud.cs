@@ -6,17 +6,19 @@ using UnityEngine;
 public sealed class BehaviorCloud
 {
     [SerializeField] private List<BehaviorRecord> records = new();
+    [SerializeField] private int maxRecords = 50;
 
     public IReadOnlyList<BehaviorRecord> Records => records;
+
+    private readonly List<RetrievalCandidate> candidateCache = new();
 
     public void AddRecord(BehaviorRecord record)
     {
         if (record == null)
-        {
             return;
-        }
 
         records.Add(record);
+        TrimExcess();
     }
 
     public void AddOrMergeRecord(BehaviorRecord candidate, float mergeThreshold)
@@ -47,7 +49,14 @@ public sealed class BehaviorCloud
         else
         {
             records.Add(candidate);
+            TrimExcess();
         }
+    }
+
+    private void TrimExcess()
+    {
+        while (records.Count > maxRecords)
+            records.RemoveAt(0);
     }
 
     public void Clear()
@@ -63,21 +72,19 @@ public sealed class BehaviorCloud
 
     public List<RetrievalCandidate> GetCandidates(DecisionBrain brain)
     {
-        List<RetrievalCandidate> candidates = new();
+        candidateCache.Clear();
 
         for (int i = 0; i < records.Count; i++)
         {
             BehaviorRecord record = records[i];
             if (record == null)
-            {
                 continue;
-            }
 
             float distance = record.DistanceTo(brain);
-            candidates.Add(new RetrievalCandidate(record, distance));
+            candidateCache.Add(new RetrievalCandidate(record, distance));
         }
 
-        candidates.Sort((a, b) => a.Distance.CompareTo(b.Distance));
-        return candidates;
+        candidateCache.Sort((a, b) => a.Distance.CompareTo(b.Distance));
+        return candidateCache;
     }
 }

@@ -30,6 +30,7 @@ public class EnemyWander : MonoBehaviour
     private bool isChasing;
     private float defaultSpeed;
     private float health;
+    private CreatureBrainController cachedCreature;
 
     private void Awake()
     {
@@ -39,6 +40,7 @@ public class EnemyWander : MonoBehaviour
         health = maxHealth;
         if (levelBounds == null)
             levelBounds = FindFirstObjectByType<LevelBounds>();
+        cachedCreature = FindFirstObjectByType<CreatureBrainController>();
     }
 
     private void Start()
@@ -90,22 +92,21 @@ public class EnemyWander : MonoBehaviour
 
     private void FindCreature()
     {
-        CreatureBrainController creature = FindFirstObjectByType<CreatureBrainController>();
-        if (creature == null)
+        if (cachedCreature == null)
         {
             isChasing = false;
             creatureTarget = null;
             return;
         }
 
-        float dist = Vector3.Distance(transform.position, creature.transform.position);
+        float dist = Vector3.Distance(transform.position, cachedCreature.transform.position);
 
         if (isChasing)
             return;
 
         if (dist <= detectionRadius)
         {
-            creatureTarget = creature.transform;
+            creatureTarget = cachedCreature.transform;
             isChasing = true;
             controller.Speed = chaseSpeed;
             hasTarget = false;
@@ -137,9 +138,8 @@ public class EnemyWander : MonoBehaviour
 
         if (health <= 0f)
         {
-            CreatureBrainController creature = FindFirstObjectByType<CreatureBrainController>();
-            if (creature != null)
-                creature.OnEnemyKilled();
+            if (cachedCreature != null)
+                cachedCreature.OnEnemyKilled();
 
             Destroy(gameObject);
         }
