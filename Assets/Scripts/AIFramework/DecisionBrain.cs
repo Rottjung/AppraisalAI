@@ -29,6 +29,8 @@ public sealed class DecisionBrain : MonoBehaviour
     public IReadOnlyList<BehaviorNode> BehaviorNodes => behaviorNodes;
     public BehaviorCloud Cloud => behaviorCloud;
     public BehaviorCloudData SaveTarget => saveTarget;
+    public void SetSaveTarget(BehaviorCloudData so) { saveTarget = so; }
+    public void SetLoadSource(BehaviorCloudData so) { loadSource = so; }
 
     private void Awake()
     {

@@ -234,7 +234,6 @@ public class CreatureBrainController : MonoBehaviour
             return;
 
         health = Mathf.Max(0f, health - amount);
-        Debug.Log($"[Damage] Creature took {amount} damage, health={health}/{maxHealth}", this);
         sensors?.SetSignal("health", health / maxHealth);
         learningState?.Apply("health", health / maxHealth, false);
         brain?.SetInputRaw("health", health / maxHealth);

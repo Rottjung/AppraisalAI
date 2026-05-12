@@ -134,6 +134,8 @@ public class GeneticTrainer : MonoBehaviour
     {
         ClearCreatures();
 
+        BehaviorCloudData templateSO = creaturePrefab.GetComponentInChildren<DecisionBrain>()?.SaveTarget;
+
         for (int i = 0; i < populationSize; i++)
         {
             Vector3 pos = levelBounds.GetRandomPointInside();
@@ -144,7 +146,17 @@ public class GeneticTrainer : MonoBehaviour
 
             var brain = go.GetComponentInChildren<DecisionBrain>();
             if (brain != null)
+            {
                 brain.SetLearnableWeights(genomes[i].weights);
+
+                if (templateSO != null)
+                {
+                    var uniqueSO = ScriptableObject.CreateInstance<BehaviorCloudData>();
+                    uniqueSO.name = $"Creature_{i}_Brain";
+                    brain.SetSaveTarget(uniqueSO);
+                    // loadSource stays as the shared template SO (all creatures load same start point)
+                }
+            }
 
             var controller = go.GetComponentInChildren<CreatureBrainController>();
             if (controller != null)
@@ -182,13 +194,25 @@ public class GeneticTrainer : MonoBehaviour
 
         genomes.Sort((a, b) => b.fitness.CompareTo(a.fitness));
 
-        // Save best creature's full brain state (cloud + learnedOffsets) to SO
+        // Save best creature's brain state to its unique SO and to the template SO
         int bestIdx = genomes.Count > 0 ? genomes.IndexOf(genomes[0]) : -1;
         if (bestIdx >= 0 && bestIdx < creatures.Count && creatures[bestIdx] != null)
         {
             var bestBrain = creatures[bestIdx].GetComponentInChildren<DecisionBrain>();
             if (bestBrain != null)
+            {
                 bestBrain.SaveToTarget();
+
+                // Also persist to the template SO so next gen's Awake loads it
+                var templateBrain = creaturePrefab.GetComponentInChildren<DecisionBrain>();
+                if (templateBrain != null && templateBrain.SaveTarget != null)
+                {
+                    float[] offsets = new float[weightCount];
+                    bestBrain.GetLearnableOffsets(offsets);
+                    templateBrain.SaveTarget.CopyFrom(bestBrain.Cloud);
+                    templateBrain.SaveTarget.SetOffsets(offsets);
+                }
+            }
         }
 
         Debug.Log($"Gen {currentGeneration + 1}: best={genomes[0].fitness:F2}");
