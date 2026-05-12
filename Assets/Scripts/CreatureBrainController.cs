@@ -120,6 +120,8 @@ public class CreatureBrainController : MonoBehaviour
 
     private void Start()
     {
+        if (debugText == null)
+            debugText = GetComponentInChildren<TMPro.TMP_Text>();
         sensors?.EnsureSignal("health", 1f);
         learningState?.EnsureSignal("enemyKilled", SignalType.Int, 0);
         SetupAttackDrive();
