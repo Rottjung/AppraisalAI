@@ -33,7 +33,7 @@ public sealed class DecisionBrain : MonoBehaviour
     private void Awake()
     {
         RebuildCaches();
-        if (loadSource != null)
+        if (loadSource != null && loadSource.Records.Count > 0)
         {
             loadSource.CopyTo(behaviorCloud);
             Debug.Log($"Cloud loaded from {loadSource.name} ({loadSource.Records.Count} records)", this);
