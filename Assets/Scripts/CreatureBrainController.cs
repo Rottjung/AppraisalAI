@@ -114,6 +114,8 @@ public class CreatureBrainController : MonoBehaviour
             cachedMetabolicStress = brain.GetFeatureNode("MetabolicStress");
             cachedRecoveryNeed = brain.GetFeatureNode("RecoveryNeed");
         }
+        if (levelBounds == null)
+            levelBounds = FindFirstObjectByType<LevelBounds>();
         health = maxHealth;
         startingY = transform.position.y;
     }
