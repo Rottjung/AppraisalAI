@@ -54,7 +54,7 @@ public class CloudVisualizer : EditorWindow
         preview.camera.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 1f);
 
         sphereMesh = Resources.GetBuiltinResource<Mesh>("Sphere.fbx");
-        previewMat = new Material(Shader.Find("Standard"));
+        previewMat = new Material(Shader.Find("Unlit/Color"));
         previewMat.hideFlags = HideFlags.HideAndDontSave;
     }
 
@@ -162,17 +162,15 @@ public class CloudVisualizer : EditorWindow
         EditorGUILayout.Space();
 
         int sizeIdx = EditorGUILayout.Popup("Size", NodeIndex(mapSize), nodeOptions);
-        if (sizeIdx == 0)
-            mapSize.constantValue = EditorGUILayout.FloatField("Constant Size", mapSize.constantValue);
+        mapSize.constantValue = EditorGUILayout.FloatField("Constant Size", mapSize.constantValue);
         mapSize = MakeMapping(sizeIdx, mapSize.constantValue, mapSize.constantColor);
 
         int colorIdx = EditorGUILayout.Popup("Color", NodeIndex(mapColor), nodeOptions);
-        if (colorIdx == 0)
-            mapColor.constantColor = EditorGUILayout.ColorField("Constant Color", mapColor.constantColor);
+        mapColor.constantColor = EditorGUILayout.ColorField("Constant Color", mapColor.constantColor);
         mapColor = MakeMapping(colorIdx, mapColor.constantValue, mapColor.constantColor);
 
         if (colorIdx > 0)
-            EditorGUILayout.HelpBox("Color = lerp(white, chosen constant color, coord value)", MessageType.Info);
+            EditorGUILayout.HelpBox("Color = lerp(white, constant color, coord value)", MessageType.Info);
 
         EditorGUILayout.Space();
         pointScale = EditorGUILayout.Slider("Point Scale", pointScale, 0.01f, 5f);
