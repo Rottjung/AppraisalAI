@@ -163,6 +163,7 @@ public class GeneticTrainer : MonoBehaviour
 
                 brain.SetSaveTarget(creatureSO);
                 brain.SetLoadSource(creatureSO);
+                brain.LoadCloud(); // Reload cloud from the new loadSource (overrides Awake's template load)
             }
 
             var controller = go.GetComponentInChildren<CreatureBrainController>();

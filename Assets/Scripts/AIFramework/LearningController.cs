@@ -234,7 +234,7 @@ public class LearningController : MonoBehaviour
             ApplyTrace(node, normalized);
         }
 
-        if (normalized > 0.3f && brain != null)
+        if (normalized > 0f && brain != null)
         {
             var record = new BehaviorRecord(
                 $"learned_{activeEpisode.EpisodeTypeId}",
