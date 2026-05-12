@@ -227,6 +227,7 @@ public class LearningController : MonoBehaviour
                     record.AddCoordinate(new BehaviorCoordinate(node.Id, node.Value, 1f));
             }
 
+            bool hasFilters = false;
             for (int i = 0; i < brain.Cloud.Records.Count; i++)
             {
                 var existing = brain.Cloud.Records[i];
@@ -234,7 +235,24 @@ public class LearningController : MonoBehaviour
                 {
                     for (int f = 0; f < existing.Filters.Count; f++)
                         record.AddFilter(existing.Filters[f]);
+                    hasFilters = true;
                     break;
+                }
+            }
+
+            if (!hasFilters)
+            {
+                switch (activeEpisode.EpisodeTypeId)
+                {
+                    case "SeekFood":
+                        record.AddFilter(new PayloadFilter { signalId = "foodProximity", comparison = ComparisonType.Greater, value = 0f });
+                        break;
+                    case "FleeEnemy":
+                        record.AddFilter(new PayloadFilter { signalId = "enemyProximity", comparison = ComparisonType.Greater, value = 0f });
+                        break;
+                    case "Attack":
+                        record.AddFilter(new PayloadFilter { signalId = "enemyProximity", comparison = ComparisonType.Greater, value = 0f });
+                        break;
                 }
             }
 
