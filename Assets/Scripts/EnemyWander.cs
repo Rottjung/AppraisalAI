@@ -94,9 +94,13 @@ public class EnemyWander : MonoBehaviour
     {
         if (cachedCreature == null)
         {
-            isChasing = false;
-            creatureTarget = null;
-            return;
+            cachedCreature = FindFirstObjectByType<CreatureBrainController>();
+            if (cachedCreature == null)
+            {
+                isChasing = false;
+                creatureTarget = null;
+                return;
+            }
         }
 
         float dist = Vector3.Distance(transform.position, cachedCreature.transform.position);
