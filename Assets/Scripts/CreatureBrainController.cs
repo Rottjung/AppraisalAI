@@ -49,7 +49,7 @@ public class CreatureBrainController : MonoBehaviour
 
     [Header("Exploration")]
     [SerializeField, Range(0f, 1f)] private float explorationRate = 0.15f;
-    [SerializeField] private string[] randomPayloads = new[] { "Wander", "SeekFood", "FleeEnemy", "Attack" };
+    [SerializeField]     private string[] randomPayloads = new[] { "Wander", "SeekFood", "FleeEnemy", "Attack", "Idle" };
 
     [Header("Health")]
     [SerializeField] private float maxHealth = 3f;
@@ -117,6 +117,21 @@ public class CreatureBrainController : MonoBehaviour
         sensors?.EnsureSignal("health", 1f);
         learningState?.EnsureSignal("enemyKilled", SignalType.Int, 0);
         SetupAttackDrive();
+        SetupIdleDrive();
+    }
+
+    private void SetupIdleDrive()
+    {
+        if (brain == null) return;
+        if (brain.GetBehaviorNode("IdleDrive") != null) return;
+
+        var idleDrive = new BehaviorNode("IdleDrive", "Idle Drive");
+        idleDrive.SetActivationType(ActivationType.Clamped01);
+        idleDrive.SetBias(0.3f);
+        idleDrive.AddConnection(new Connection("energy", -0.8f));
+        idleDrive.AddConnection(new Connection("enemyProximity", -0.5f));
+        idleDrive.AddConnection(new Connection("health", -0.3f));
+        brain.AddBehaviorNode(idleDrive);
     }
 
     private void SetupAttackDrive()
@@ -441,10 +456,8 @@ public class CreatureBrainController : MonoBehaviour
                 PickNewWanderTarget();
             wanderRetargetTimer = retargetInterval;
         }
-        else if (nextPayload == "Idle" || nextPayload == "Dead")
+        else if (nextPayload == "Dead")
         {
-            if (nextPayload == "Idle")
-                controller.Stop();
             return;
         }
 

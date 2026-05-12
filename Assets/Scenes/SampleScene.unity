@@ -2934,6 +2934,9 @@ MonoBehaviour:
       - behaviorNodeId: AttackDrive
         value: 0
         weight: 1
+      - behaviorNodeId: IdleDrive
+        value: 0
+        weight: 1
     - id: flee_enemy_record
       payloadId: FleeEnemy
       coordinates:
@@ -2950,6 +2953,9 @@ MonoBehaviour:
         value: 0.25
         weight: 1
       - behaviorNodeId: AttackDrive
+        value: 0
+        weight: 1
+      - behaviorNodeId: IdleDrive
         value: 0
         weight: 1
     - id: idle_record
@@ -2970,6 +2976,9 @@ MonoBehaviour:
       - behaviorNodeId: AttackDrive
         value: 0
         weight: 1
+      - behaviorNodeId: IdleDrive
+        value: 1
+        weight: 1
     - id: wander_record
       payloadId: Wander
       coordinates:
@@ -2986,6 +2995,9 @@ MonoBehaviour:
         value: 0
         weight: 1
       - behaviorNodeId: AttackDrive
+        value: 0
+        weight: 1
+      - behaviorNodeId: IdleDrive
         value: 0
         weight: 1
     - id: repick_target_record
@@ -3006,6 +3018,9 @@ MonoBehaviour:
       - behaviorNodeId: AttackDrive
         value: 0
         weight: 1
+      - behaviorNodeId: IdleDrive
+        value: 0
+        weight: 1
     - id: attack_enemy_record
       payloadId: Attack
       coordinates:
@@ -3022,6 +3037,9 @@ MonoBehaviour:
         value: 0
         weight: 1
       - behaviorNodeId: RepickDrive
+        value: 0
+        weight: 1
+      - behaviorNodeId: IdleDrive
         value: 0
         weight: 1
     maxRecords: 50
