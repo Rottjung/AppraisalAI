@@ -20,50 +20,53 @@ public class CloudVisualizer : EditorWindow
     private Mapping mapX, mapY, mapZ, mapSize, mapColor;
     private float spacingMultiplier = 10f;
     private float pointScale = 0.5f;
-    private bool drawLabels = true;
 
     private List<string> nodeIds = new();
     private string[] nodeOptions;
-    private bool subscribed;
 
-    // Per-record visibility toggles
-    private Dictionary<BehaviorRecord, bool> recordVisibility = new();
-    private bool showAll = true;
+    private PreviewRenderUtility preview;
+    private Mesh sphereMesh;
+    private Material previewMat;
+
+    // Orbit camera
+    private float orbitPitch = 20f;
+    private float orbitYaw = 45f;
+    private float orbitDist = 15f;
+    private Vector2 lastMousePos;
+    private bool isDragging;
 
     [MenuItem("Tools/Cloud Visualizer")]
     private static void Open()
     {
         var w = GetWindow<CloudVisualizer>();
         w.titleContent = new GUIContent("Cloud Viz");
+        w.minSize = new Vector2(400, 500);
         w.Show();
     }
 
     private void OnEnable()
     {
-        Subscribe();
+        preview = new PreviewRenderUtility();
+        preview.camera.fieldOfView = 30f;
+        preview.camera.nearClipPlane = 0.1f;
+        preview.camera.farClipPlane = 100f;
+        preview.camera.clearFlags = CameraClearFlags.SolidColor;
+        preview.camera.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 1f);
+
+        sphereMesh = Resources.GetBuiltinResource<Mesh>("Sphere.fbx");
+        previewMat = new Material(Shader.Find("Standard"));
+        previewMat.hideFlags = HideFlags.HideAndDontSave;
     }
 
     private void OnDisable()
     {
-        Unsubscribe();
-    }
-
-    private void Subscribe()
-    {
-        if (!subscribed)
+        if (preview != null)
         {
-            SceneView.duringSceneGui += OnSceneGUI;
-            subscribed = true;
+            preview.Cleanup();
+            preview = null;
         }
-    }
-
-    private void Unsubscribe()
-    {
-        if (subscribed)
-        {
-            SceneView.duringSceneGui -= OnSceneGUI;
-            subscribed = false;
-        }
+        if (previewMat != null)
+            DestroyImmediate(previewMat);
     }
 
     private void RefreshNodeList()
@@ -90,16 +93,6 @@ public class CloudVisualizer : EditorWindow
         nodeOptions[0] = "Constant";
         for (int i = 0; i < nodeIds.Count; i++)
             nodeOptions[i + 1] = nodeIds[i];
-
-        // Initialize all records as visible
-        if (cloudData != null)
-        {
-            foreach (var record in cloudData.Records)
-            {
-                if (record != null && !recordVisibility.ContainsKey(record))
-                    recordVisibility[record] = true;
-            }
-        }
     }
 
     private int NodeIndex(Mapping m)
@@ -120,18 +113,25 @@ public class CloudVisualizer : EditorWindow
     {
         scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
 
+        DrawControls();
+        DrawPreview();
+
+        EditorGUILayout.EndScrollView();
+    }
+
+    private void DrawControls()
+    {
         var newData = (BehaviorCloudData)EditorGUILayout.ObjectField("Cloud Data", cloudData, typeof(BehaviorCloudData), false);
         if (newData != cloudData)
         {
             cloudData = newData;
-            recordVisibility.Clear();
             RefreshNodeList();
+            FramePoints();
         }
 
         if (cloudData == null)
         {
             EditorGUILayout.HelpBox("Assign a BehaviorCloudData asset to visualize.", MessageType.Info);
-            EditorGUILayout.EndScrollView();
             return;
         }
 
@@ -141,7 +141,6 @@ public class CloudVisualizer : EditorWindow
         if (nodeOptions == null || nodeOptions.Length == 0)
         {
             EditorGUILayout.HelpBox("No behavior nodes found in cloud records.", MessageType.Warning);
-            EditorGUILayout.EndScrollView();
             return;
         }
 
@@ -177,77 +176,97 @@ public class CloudVisualizer : EditorWindow
 
         EditorGUILayout.Space();
         pointScale = EditorGUILayout.Slider("Point Scale", pointScale, 0.01f, 5f);
-        drawLabels = EditorGUILayout.Toggle("Draw Labels", drawLabels);
 
         EditorGUILayout.Space();
 
         if (GUILayout.Button("Fit View to Points"))
             FramePoints();
-
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Behaviors", EditorStyles.boldLabel);
-
-        showAll = EditorGUILayout.Toggle("Show All", showAll);
-        if (showAll)
-        {
-            foreach (var key in new List<BehaviorRecord>(recordVisibility.Keys))
-                recordVisibility[key] = true;
-        }
-
-        EditorGUI.indentLevel++;
-        foreach (var record in cloudData.Records)
-        {
-            if (record == null) continue;
-            if (!recordVisibility.ContainsKey(record))
-                recordVisibility[record] = true;
-
-            Color c = GetColor(record);
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.Toggle(recordVisibility[record], GUILayout.Width(20));
-            EditorGUILayout.LabelField(record.PayloadId, GUILayout.Width(100));
-
-            var previewRect = EditorGUILayout.GetControlRect(GUILayout.Width(30), GUILayout.Height(16));
-            EditorGUI.DrawRect(previewRect, c);
-
-            string coordStr = "";
-            foreach (var coord in record.Coordinates)
-                coordStr += $"{coord.BehaviorNodeId}={coord.Value:F2} ";
-            EditorGUILayout.LabelField(coordStr);
-            EditorGUILayout.EndHorizontal();
-        }
-        EditorGUI.indentLevel--;
-
-        EditorGUILayout.EndScrollView();
     }
 
-    private void OnSceneGUI(SceneView sv)
+    private void DrawPreview()
     {
         if (cloudData == null || nodeIds.Count == 0)
             return;
 
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("3D Preview", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Drag to rotate · Scroll to zoom", EditorStyles.miniLabel);
+
+        Rect previewRect = EditorGUILayout.GetControlRect(GUILayout.Height(350));
+
+        HandlePreviewEvents(previewRect);
+
+        if (Event.current.type == EventType.Repaint)
+            RenderPreview(previewRect);
+    }
+
+    private void HandlePreviewEvents(Rect rect)
+    {
+        Event e = Event.current;
+
+        if (e.type == EventType.MouseDown && rect.Contains(e.mousePosition) && e.button == 0)
+        {
+            isDragging = true;
+            lastMousePos = e.mousePosition;
+            e.Use();
+        }
+
+        if (e.type == EventType.MouseUp && e.button == 0)
+        {
+            isDragging = false;
+            e.Use();
+        }
+
+        if (e.type == EventType.MouseDrag && isDragging)
+        {
+            Vector2 delta = e.mousePosition - lastMousePos;
+            orbitYaw += delta.x * 0.5f;
+            orbitPitch = Mathf.Clamp(orbitPitch - delta.y * 0.5f, -80f, 80f);
+            lastMousePos = e.mousePosition;
+            e.Use();
+            Repaint();
+        }
+
+        if (e.type == EventType.ScrollWheel && rect.Contains(e.mousePosition))
+        {
+            orbitDist = Mathf.Clamp(orbitDist + e.delta.y * 0.5f, 2f, 100f);
+            e.Use();
+            Repaint();
+        }
+    }
+
+    private void RenderPreview(Rect rect)
+    {
+        preview.BeginPreview(rect, GUIStyle.none);
+
+        // Position camera
+        Quaternion orbitRot = Quaternion.Euler(orbitPitch, orbitYaw, 0f);
+        Vector3 cameraPos = orbitRot * new Vector3(0f, 0f, -orbitDist);
+        preview.camera.transform.position = cameraPos;
+        preview.camera.transform.LookAt(Vector3.zero, Vector3.up);
+
+        preview.lights[0].intensity = 1f;
+
+        var mpb = new MaterialPropertyBlock();
+
         foreach (var record in cloudData.Records)
         {
             if (record == null) continue;
 
-            bool visible;
-            if (!recordVisibility.TryGetValue(record, out visible) || !visible)
-                continue;
-
             Vector3 pos = GetPosition(record);
-            float size = GetSize(record);
+            float size = GetSize(record) * pointScale;
+
             Color color = GetColor(record);
+            mpb.SetColor("_Color", color);
 
-            Handles.color = color;
-            Handles.SphereHandleCap(0, pos, Quaternion.identity, size * pointScale, EventType.Repaint);
-
-            if (drawLabels)
-            {
-                var style = new GUIStyle { fontSize = 10, normal = new GUIStyleState { textColor = color } };
-                Handles.Label(pos + Vector3.up * size * pointScale, record.PayloadId, style);
-            }
+            Matrix4x4 matrix = Matrix4x4.TRS(pos, Quaternion.identity, Vector3.one * Mathf.Max(size, 0.01f));
+            preview.DrawMesh(sphereMesh, matrix, previewMat, 0, mpb);
         }
 
-        sv.Repaint();
+        preview.camera.Render();
+        Texture result = preview.EndPreview();
+
+        GUI.DrawTexture(rect, result, ScaleMode.StretchToFill, false);
     }
 
     private Vector3 GetPosition(BehaviorRecord record)
@@ -290,12 +309,25 @@ public class CloudVisualizer : EditorWindow
         if (cloudData == null || cloudData.Records.Count == 0) return;
 
         Bounds bounds = new Bounds(GetPosition(cloudData.Records[0]), Vector3.one);
+        bool hasBounds = false;
         foreach (var record in cloudData.Records)
         {
             if (record == null) continue;
-            bounds.Encapsulate(GetPosition(record));
+            if (!hasBounds)
+            {
+                bounds = new Bounds(GetPosition(record), Vector3.one);
+                hasBounds = true;
+            }
+            else
+            {
+                bounds.Encapsulate(GetPosition(record));
+            }
         }
 
-        SceneView.lastActiveSceneView.Frame(bounds, false);
+        float maxSize = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z, 1f);
+        orbitDist = maxSize * 1.5f + 2f;
+        orbitPitch = 20f;
+        orbitYaw = 45f;
+        Repaint();
     }
 }
