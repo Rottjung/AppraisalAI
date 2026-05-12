@@ -14,6 +14,11 @@ public sealed class DecisionBrain : MonoBehaviour
     [SerializeField] private List<BehaviorNode> behaviorNodes = new();
     [SerializeField] private BehaviorCloud behaviorCloud = new();
 
+    [Header("Cloud Persistence")]
+    [SerializeField] private bool saveOnQuit = true;
+    [SerializeField] private BehaviorCloudData saveTarget;
+    [SerializeField] private BehaviorCloudData loadSource;
+
     private readonly Dictionary<string, NodeBase> nodeLookup = new();
     private readonly Dictionary<string, BehaviorNode> behaviorLookup = new();
     private readonly Dictionary<string, InputNode> inputLookup = new();
@@ -287,5 +292,38 @@ public sealed class DecisionBrain : MonoBehaviour
         }
 
         Debug.Log(candidate.ToString(), this);
+    }
+
+    private void OnApplicationQuit()
+    {
+        if (saveOnQuit && saveTarget != null)
+        {
+            saveTarget.CopyFrom(behaviorCloud);
+            Debug.Log($"Cloud saved to {saveTarget.name} ({behaviorCloud.Records.Count} records)", this);
+        }
+    }
+
+    [ContextMenu("Save Cloud to Target")]
+    public void SaveCloud()
+    {
+        if (saveTarget == null)
+        {
+            Debug.LogWarning("No saveTarget assigned.", this);
+            return;
+        }
+        saveTarget.CopyFrom(behaviorCloud);
+        Debug.Log($"Cloud saved to {saveTarget.name} ({behaviorCloud.Records.Count} records)", this);
+    }
+
+    [ContextMenu("Load Cloud from Source")]
+    public void LoadCloud()
+    {
+        if (loadSource == null)
+        {
+            Debug.LogWarning("No loadSource assigned.", this);
+            return;
+        }
+        loadSource.CopyTo(behaviorCloud);
+        Debug.Log($"Cloud loaded from {loadSource.name} ({loadSource.Records.Count} records)", this);
     }
 }

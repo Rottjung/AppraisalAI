@@ -69,6 +69,7 @@ public class CreatureBrainController : MonoBehaviour
     [SerializeField] private float approachSpeed = 0.5f;
     [SerializeField] private float fleeDistance = 15f;
     [SerializeField] private float healRate = 0.02f;
+    [SerializeField] private float healMinEnergy = 0.99f;
 
     [Header("Episodes")]
     [SerializeField] private int maxLifetimes = 100;
@@ -234,7 +235,7 @@ public class CreatureBrainController : MonoBehaviour
 
         if (energy > 0.01f)
         {
-            if (energy >= 0.99f && health < maxHealth)
+            if (energy >= healMinEnergy && health < maxHealth)
             {
                 health = Mathf.Min(maxHealth, health + healRate * dt);
                 float healthNorm = health / maxHealth;
