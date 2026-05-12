@@ -709,11 +709,10 @@ MonoBehaviour:
   populationSize: 10
   topN: 3
   generations: 50
-  timePerGeneration: 30
+  timePerGeneration: 120
   mutationRate: 0.15
   mutationStrength: 0.3
   creaturePrefab: {fileID: 201937666320723380, guid: 29a8dc07960b84f45852fdf4488a668e, type: 3}
-  brainTemplate: {fileID: 7940341232487421097, guid: 29a8dc07960b84f45852fdf4488a668e, type: 3}
   levelBounds: {fileID: 1134956020}
   fitnessTimeAlive: 1
   fitnessFoodEaten: 2
