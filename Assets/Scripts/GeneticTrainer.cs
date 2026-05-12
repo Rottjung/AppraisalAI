@@ -29,6 +29,7 @@ public class GeneticTrainer : MonoBehaviour
     private bool isRunning;
     private int weightCount;
     private float spawnY;
+    private BehaviorCloudData seedSO;
 
     private class Genome
     {
@@ -93,6 +94,9 @@ public class GeneticTrainer : MonoBehaviour
         spawnY = creaturePrefab.transform.position.y;
         if (spawnY == 0f) spawnY = 0.5f;
 
+        // Seed SO comes from the prefab — either empty or a pre-trained SO the user assigned
+        seedSO = templateBrain.SaveTarget;
+
         isRunning = true;
         currentGeneration = 0;
         StartGeneration();
@@ -134,8 +138,6 @@ public class GeneticTrainer : MonoBehaviour
     {
         ClearCreatures();
 
-        BehaviorCloudData templateSO = creaturePrefab.GetComponentInChildren<DecisionBrain>()?.SaveTarget;
-
         for (int i = 0; i < populationSize; i++)
         {
             Vector3 pos = levelBounds.GetRandomPointInside();
@@ -149,13 +151,13 @@ public class GeneticTrainer : MonoBehaviour
             {
                 brain.SetLearnableWeights(genomes[i].weights);
 
-                if (templateSO != null)
-                {
-                    var uniqueSO = ScriptableObject.CreateInstance<BehaviorCloudData>();
-                    uniqueSO.name = $"Creature_{i}_Brain";
-                    brain.SetSaveTarget(uniqueSO);
-                    // loadSource stays as the shared template SO (all creatures load same start point)
-                }
+                // Every creature gets its own private SO — a deep copy of the seed SO
+                var creatureSO = ScriptableObject.CreateInstance<BehaviorCloudData>();
+                creatureSO.name = $"Creature_{i}_Brain";
+                if (seedSO != null)
+                    creatureSO.CopyFromSO(seedSO);
+                brain.SetSaveTarget(creatureSO);
+                brain.SetLoadSource(creatureSO);
             }
 
             var controller = go.GetComponentInChildren<CreatureBrainController>();
@@ -194,7 +196,7 @@ public class GeneticTrainer : MonoBehaviour
 
         genomes.Sort((a, b) => b.fitness.CompareTo(a.fitness));
 
-        // Save best creature's brain state to its unique SO and to the template SO
+        // Save the best creature to its private SO, then make that SO the next gen's seed
         int bestIdx = genomes.Count > 0 ? genomes.IndexOf(genomes[0]) : -1;
         if (bestIdx >= 0 && bestIdx < creatures.Count && creatures[bestIdx] != null)
         {
@@ -202,16 +204,7 @@ public class GeneticTrainer : MonoBehaviour
             if (bestBrain != null)
             {
                 bestBrain.SaveToTarget();
-
-                // Also persist to the template SO so next gen's Awake loads it
-                var templateBrain = creaturePrefab.GetComponentInChildren<DecisionBrain>();
-                if (templateBrain != null && templateBrain.SaveTarget != null)
-                {
-                    float[] offsets = new float[weightCount];
-                    bestBrain.GetLearnableOffsets(offsets);
-                    templateBrain.SaveTarget.CopyFrom(bestBrain.Cloud);
-                    templateBrain.SaveTarget.SetOffsets(offsets);
-                }
+                seedSO = bestBrain.SaveTarget;
             }
         }
 
