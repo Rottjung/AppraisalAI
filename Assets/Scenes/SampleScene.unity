@@ -2564,9 +2564,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b1a1f17a96f0ba4a87e1642b3a19c3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DecisionBrain
-  inputCount: 8
+  inputCount: 9
   featureCount: 1
-  behaviorCount: 4
+  behaviorCount: 5
   inputNodes:
   - id: hunger
     displayName: Hunger
@@ -2635,6 +2635,15 @@ MonoBehaviour:
     displayName: recent Enemy Threat
     isEnabled: 1
     valueType: 1
+    minValue: 0
+    maxValue: 1
+    clampNormalized: 1
+    rawValue: 0
+    normalizedValue: 0
+  - id: health
+    displayName: Health
+    isEnabled: 1
+    valueType: 0
     minValue: 0
     maxValue: 1
     clampNormalized: 1
@@ -2907,6 +2916,42 @@ MonoBehaviour:
       learnedOffset: 0
       minEffectiveWeight: 0
       maxEffectiveWeight: 0
+    - sourceNodeId: bias
+      weight: 0
+      isEnabled: 1
+      isLearnable: 0
+      learnedOffset: 0
+      minEffectiveWeight: 0
+      maxEffectiveWeight: 0
+  - id: IdleDrive
+    displayName: Idle Drive
+    isEnabled: 1
+    bias: 0.8
+    activationType: 1
+    rawValue: 0
+    value: 0
+    connections:
+    - sourceNodeId: energy
+      weight: -1
+      isEnabled: 1
+      isLearnable: 1
+      learnedOffset: 0
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
+    - sourceNodeId: enemyProximity
+      weight: -0.5
+      isEnabled: 1
+      isLearnable: 1
+      learnedOffset: 0
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
+    - sourceNodeId: health
+      weight: -0.3
+      isEnabled: 1
+      isLearnable: 1
+      learnedOffset: 0
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: bias
       weight: 0
       isEnabled: 1

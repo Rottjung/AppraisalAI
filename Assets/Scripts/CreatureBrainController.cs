@@ -117,21 +117,6 @@ public class CreatureBrainController : MonoBehaviour
         sensors?.EnsureSignal("health", 1f);
         learningState?.EnsureSignal("enemyKilled", SignalType.Int, 0);
         SetupAttackDrive();
-        SetupIdleDrive();
-    }
-
-    private void SetupIdleDrive()
-    {
-        if (brain == null) return;
-        if (brain.GetBehaviorNode("IdleDrive") != null) return;
-
-        var idleDrive = new BehaviorNode("IdleDrive", "Idle Drive");
-        idleDrive.SetActivationType(ActivationType.Clamped01);
-        idleDrive.SetBias(0.8f);
-        idleDrive.AddConnection(new Connection("energy", -1f));
-        idleDrive.AddConnection(new Connection("enemyProximity", -0.5f));
-        idleDrive.AddConnection(new Connection("health", -0.3f));
-        brain.AddBehaviorNode(idleDrive);
     }
 
     private void SetupAttackDrive()
