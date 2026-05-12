@@ -287,7 +287,7 @@ public class CreatureBrainController : MonoBehaviour
         currentPayload = "Dead";
         hasMoveTarget = false;
         controller.Stop();
-        debugText.text = "Dead";
+        if (debugText != null) debugText.text = "Dead";
 
         currentLifetime++;
 
@@ -296,7 +296,7 @@ public class CreatureBrainController : MonoBehaviour
 
         if (!ignoreMaxLifetimes && currentLifetime >= maxLifetimes)
         {
-            debugText.text = "Done";
+            if (debugText != null) debugText.text = "Done";
             if (logDecisions)
                 Debug.Log("All lifetimes complete.", this);
             return;
@@ -331,7 +331,7 @@ public class CreatureBrainController : MonoBehaviour
 
         currentPayload = "Idle";
         hasMoveTarget = false;
-        debugText.text = "Respawn";
+        if (debugText != null) debugText.text = "Respawn";
 
         if (logDecisions)
             Debug.Log($"Creature respawned. Lifetime {currentLifetime}/{maxLifetimes}", this);
@@ -381,7 +381,7 @@ public class CreatureBrainController : MonoBehaviour
         if (explorationRate > 0f && Random.value < explorationRate && randomPayloads.Length > 0)
         {
             string explorePayload = randomPayloads[Random.Range(0, randomPayloads.Length)];
-            debugText.text = explorePayload;
+            if (debugText != null) debugText.text = explorePayload;
             if (currentPayload != explorePayload)
                 OnPayloadChanged(currentPayload, explorePayload);
             currentPayload = explorePayload;
@@ -397,7 +397,7 @@ public class CreatureBrainController : MonoBehaviour
             string fallback = "Idle";
             if (randomPayloads.Length > 0)
                 fallback = randomPayloads[Random.Range(0, randomPayloads.Length)];
-            debugText.text = fallback;
+            if (debugText != null) debugText.text = fallback;
             if (currentPayload != fallback)
                 OnPayloadChanged(currentPayload, fallback);
             currentPayload = fallback;
@@ -405,7 +405,7 @@ public class CreatureBrainController : MonoBehaviour
         }
 
         string proposedPayload = result.Record.PayloadId ?? "Idle";
-        debugText.text = proposedPayload;
+        if (debugText != null) debugText.text = proposedPayload;
 
         if (logDecisions)
             Debug.Log($"Proposed={proposedPayload} stress={GetMetabolicStress():F2} recovery={GetRecoveryNeed():F2}", this);
