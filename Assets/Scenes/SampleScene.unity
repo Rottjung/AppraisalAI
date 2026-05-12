@@ -3039,6 +3039,9 @@ MonoBehaviour:
       - signalId: enemyProximity
         comparison: 2
         value: 0
+  saveOnQuit: 1
+  saveTarget: {fileID: 11400000, guid: 131d477e08f8a6d478523c6a64f56b5c, type: 2}
+  loadSource: {fileID: 0}
 --- !u!114 &2051618772
 MonoBehaviour:
   m_ObjectHideFlags: 0

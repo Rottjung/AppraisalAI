@@ -217,7 +217,7 @@ public class LearningController : MonoBehaviour
         if (normalized > 0f && brain != null)
         {
             var record = new BehaviorRecord(
-                $"learned_{Time.frameCount}_{Random.Range(0, 9999)}",
+                $"learned_{activeEpisode.EpisodeTypeId}",
                 activeEpisode.EpisodeTypeId);
 
             for (int i = 0; i < brain.BehaviorNodes.Count; i++)
