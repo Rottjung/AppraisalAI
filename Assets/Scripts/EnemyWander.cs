@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class EnemyWander : MonoBehaviour
 {
@@ -30,7 +31,6 @@ public class EnemyWander : MonoBehaviour
     private bool isChasing;
     private float defaultSpeed;
     private float health;
-    private CreatureBrainController cachedCreature;
 
     private void Awake()
     {
@@ -40,48 +40,11 @@ public class EnemyWander : MonoBehaviour
         health = maxHealth;
         if (levelBounds == null)
             levelBounds = FindFirstObjectByType<LevelBounds>();
-
-        CreatureBrainController.OnCreatureSpawned += OnCreatureSpawned;
-        CreatureBrainController.OnCreatureDied += OnCreatureDied;
-    }
-
-    private void OnDestroy()
-    {
-        CreatureBrainController.OnCreatureSpawned -= OnCreatureSpawned;
-        CreatureBrainController.OnCreatureDied -= OnCreatureDied;
-    }
-
-    private void OnCreatureSpawned(CreatureBrainController creature)
-    {
-        cachedCreature = creature;
-        // If we were idle with no target and a creature appears, start chasing
-        if (!isChasing && !hasTarget && cachedCreature != null)
-        {
-            float dist = Vector3.Distance(transform.position, cachedCreature.transform.position);
-            if (dist <= detectionRadius)
-            {
-                creatureTarget = cachedCreature.transform;
-                isChasing = true;
-                controller.Speed = chaseSpeed;
-                hasTarget = false;
-            }
-        }
-    }
-
-    private void OnCreatureDied(CreatureBrainController creature)
-    {
-        if (cachedCreature == creature)
-        {
-            cachedCreature = null;
-            isChasing = false;
-            creatureTarget = null;
-            controller.Speed = defaultSpeed;
-        }
     }
 
     private void Start()
     {
-        FindCreature();
+        FindNearestCreature();
         if (!isChasing)
             PickNewTarget();
     }
@@ -91,7 +54,7 @@ public class EnemyWander : MonoBehaviour
         if (controller == null || levelBounds == null)
             return;
 
-        FindCreature();
+        FindNearestCreature();
 
         if (isChasing)
         {
@@ -102,12 +65,8 @@ public class EnemyWander : MonoBehaviour
         if (!hasTarget)
         {
             waitTimer -= Time.deltaTime;
-
             if (waitTimer <= 0f)
-            {
                 PickNewTarget();
-            }
-
             return;
         }
 
@@ -126,23 +85,42 @@ public class EnemyWander : MonoBehaviour
         controller.Move(direction);
     }
 
-    private void FindCreature()
+    private void FindNearestCreature()
     {
-        if (cachedCreature == null || cachedCreature.gameObject == null)
+        CreatureBrainController nearest = null;
+        float nearestDist = float.MaxValue;
+        Vector3 myPos = transform.position;
+
+        var all = CreatureBrainController.AllCreatures;
+        for (int i = 0; i < all.Count; i++)
         {
-            isChasing = false;
-            creatureTarget = null;
+            var c = all[i];
+            if (c == null || c.gameObject == null) continue;
+
+            float dist = Vector3.Distance(myPos, c.transform.position);
+            if (dist < nearestDist)
+            {
+                nearestDist = dist;
+                nearest = c;
+            }
+        }
+
+        if (isChasing)
+        {
+            // Stop chasing if the creature we were chasing is gone
+            if (nearest == null || (creatureTarget != null && nearest.transform != creatureTarget && nearestDist > detectionRadius * 2f))
+            {
+                isChasing = false;
+                creatureTarget = null;
+                controller.Speed = defaultSpeed;
+                if (!hasTarget) PickNewTarget();
+            }
             return;
         }
 
-        float dist = Vector3.Distance(transform.position, cachedCreature.transform.position);
-
-        if (isChasing)
-            return;
-
-        if (dist <= detectionRadius)
+        if (nearest != null && nearestDist <= detectionRadius)
         {
-            creatureTarget = cachedCreature.transform;
+            creatureTarget = nearest.transform;
             isChasing = true;
             controller.Speed = chaseSpeed;
             hasTarget = false;
@@ -174,9 +152,12 @@ public class EnemyWander : MonoBehaviour
 
         if (health <= 0f)
         {
-            if (cachedCreature != null)
-                cachedCreature.OnEnemyKilled();
-
+            var all = CreatureBrainController.AllCreatures;
+            for (int i = 0; i < all.Count; i++)
+            {
+                if (all[i] != null)
+                    all[i].OnEnemyKilled();
+            }
             Destroy(gameObject);
         }
     }
