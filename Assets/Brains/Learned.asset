@@ -12,49 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 938b591cce278d84c84d0932125e458d, type: 3}
   m_Name: Learned
   m_EditorClassIdentifier: Assembly-CSharp::BehaviorCloudData
-  records:
-  - id: learned_SeekFood
-    payloadId: SeekFood
-    coordinates:
-    - behaviorNodeId: FoodDrive
-      value: 0.74784005
-      weight: 1
-    - behaviorNodeId: Fear
-      value: 0.47523144
-      weight: 1
-    - behaviorNodeId: WanderDrive
-      value: 0
-      weight: 1
-    - behaviorNodeId: RepickDrive
-      value: 0.69523084
-      weight: 1
-    - behaviorNodeId: IdleDrive
-      value: 0.82413393
-      weight: 1
-    - behaviorNodeId: AttackDrive
-      value: 0.55558693
-      weight: 1
-    filters: []
-  - id: learned_SeekFood
-    payloadId: SeekFood
-    coordinates:
-    - behaviorNodeId: FoodDrive
-      value: 0.68307954
-      weight: 1
-    - behaviorNodeId: Fear
-      value: 0.45231596
-      weight: 1
-    - behaviorNodeId: WanderDrive
-      value: 0
-      weight: 1
-    - behaviorNodeId: RepickDrive
-      value: 0
-      weight: 1
-    - behaviorNodeId: IdleDrive
-      value: 0.9034971
-      weight: 1
-    - behaviorNodeId: AttackDrive
-      value: 0.5400504
-      weight: 1
-    filters: []
+  records: []
   learnedOffsets: []

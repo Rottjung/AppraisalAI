@@ -72,6 +72,24 @@ public class LearningController : MonoBehaviour
 
     private void EnsureDefaultEpisodes()
     {
+        if (!episodeLookup.ContainsKey("Wander"))
+        {
+            var def = new LearningEpisodeDefinition();
+            def.Initialize("Wander",
+                new List<string> { "WanderDrive", "RepickDrive", "FoodDrive" },
+                new List<RewardTermDefinition>
+                {
+                    new RewardTermDefinition("foodConsumed", RewardEvaluationMode.Delta, 2f),
+                    new RewardTermDefinition("isDead", RewardEvaluationMode.EndValue, -3f),
+                    new RewardTermDefinition("hunger", RewardEvaluationMode.EndValue, -0.5f),
+                    new RewardTermDefinition("energy", RewardEvaluationMode.Delta, 0.3f),
+                    new RewardTermDefinition("MetabolicStress", RewardEvaluationMode.EndValue, -0.3f),
+                },
+                3f);
+            episodeDefinitions.Add(def);
+            episodeLookup["Wander"] = def;
+        }
+
         if (!episodeLookup.ContainsKey("SeekFood"))
         {
             var def = new LearningEpisodeDefinition();
@@ -79,7 +97,7 @@ public class LearningController : MonoBehaviour
                 new List<string> { "FoodDrive" },
                 new List<RewardTermDefinition>
                 {
-                    new RewardTermDefinition("foodConsumed", RewardEvaluationMode.Delta, 2f),
+                    new RewardTermDefinition("foodConsumed", RewardEvaluationMode.Delta, 2.5f),
                     new RewardTermDefinition("isDead", RewardEvaluationMode.EndValue, -3f),
                     new RewardTermDefinition("hunger", RewardEvaluationMode.EndValue, -0.5f),
                     new RewardTermDefinition("energy", RewardEvaluationMode.Delta, 0.3f),
@@ -97,10 +115,10 @@ public class LearningController : MonoBehaviour
                 new List<string> { "Fear" },
                 new List<RewardTermDefinition>
                 {
-                    new RewardTermDefinition("health", RewardEvaluationMode.Delta, 1f),
+                    new RewardTermDefinition("health", RewardEvaluationMode.Delta, 1.5f),
                     new RewardTermDefinition("isDead", RewardEvaluationMode.EndValue, -3f),
-                    new RewardTermDefinition("energy", RewardEvaluationMode.Delta, 0.5f),
-                    new RewardTermDefinition("enemyProximity", RewardEvaluationMode.EndValue, -1f),
+                    new RewardTermDefinition("energy", RewardEvaluationMode.Delta, 0.8f),
+                    new RewardTermDefinition("enemyProximity", RewardEvaluationMode.EndValue, -1.5f),
                 },
                 3f);
             episodeDefinitions.Add(def);
@@ -114,10 +132,11 @@ public class LearningController : MonoBehaviour
                 new List<string> { "AttackDrive" },
                 new List<RewardTermDefinition>
                 {
-                    new RewardTermDefinition("enemyKilled", RewardEvaluationMode.Delta, 3f),
-                    new RewardTermDefinition("health", RewardEvaluationMode.Delta, 1f),
-                    new RewardTermDefinition("energy", RewardEvaluationMode.Delta, 0.5f),
+                    new RewardTermDefinition("enemyKilled", RewardEvaluationMode.Delta, 3.5f),
+                    new RewardTermDefinition("health", RewardEvaluationMode.Delta, 1.5f),
+                    new RewardTermDefinition("energy", RewardEvaluationMode.Delta, 1f),
                     new RewardTermDefinition("isDead", RewardEvaluationMode.EndValue, -3f),
+                    new RewardTermDefinition("hunger", RewardEvaluationMode.EndValue, -0.5f),
                 },
                 3f);
             episodeDefinitions.Add(def);
