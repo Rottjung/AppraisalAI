@@ -144,50 +144,60 @@ public class CloudVisualizer : EditorWindow
 
         Rect totalRect = new Rect(0, 0, position.width, position.height);
 
-        // Compute panel widths
+        // Handle splitter drag release BEFORE computing layout (MouseUp anywhere)
+        if (Event.current.rawType == EventType.MouseUp && isDraggingSplitter)
+        {
+            isDraggingSplitter = false;
+            Event.current.Use();
+            Repaint();
+        }
+
+        // Compute panel widths: settings on left, preview on right
         float splitX = Mathf.Clamp(totalRect.width * splitRatio, minPanelWidth, totalRect.width - minPanelWidth - splitterWidth);
-        float settingsWidth = totalRect.width - splitX - splitterWidth;
+        float leftWidth = splitX;
 
-        Rect previewRect = new Rect(0, 0, splitX, totalRect.height);
-        Rect splitterRect = new Rect(splitX, 0, splitterWidth, totalRect.height);
-        Rect settingsRect = new Rect(splitX + splitterWidth, 0, settingsWidth, totalRect.height);
+        Rect leftRect = new Rect(0, 0, leftWidth, totalRect.height);
+        Rect splitterRect = new Rect(leftWidth, 0, splitterWidth, totalRect.height);
+        Rect rightRect = new Rect(leftWidth + splitterWidth, 0, totalRect.width - leftWidth - splitterWidth, totalRect.height);
 
-        // Preview
-        if (cloudData != null && nodeIds.Count > 0)
-        {
-            HandlePreviewEvents(previewRect);
-            if (Event.current.type == EventType.Repaint)
-                RenderPreview(previewRect);
-        }
-        else
-        {
-            EditorGUI.DrawRect(previewRect, new Color(0.15f, 0.15f, 0.15f, 1f));
-            if (cloudData == null)
-            {
-                GUI.Label(previewRect, "Load a BehaviorCloudData asset", new GUIStyle(EditorStyles.centeredGreyMiniLabel)
-                { fontSize = 14, alignment = TextAnchor.MiddleCenter });
-            }
-        }
+        // Settings panel (left)
+        GUILayout.BeginArea(leftRect);
+        DrawSettings();
+        GUILayout.EndArea();
 
         // Splitter
         EditorGUIUtility.AddCursorRect(splitterRect, MouseCursor.ResizeHorizontal);
+        EditorGUI.DrawRect(splitterRect, new Color(0.3f, 0.3f, 0.3f, 1f));
+
         if (Event.current.type == EventType.MouseDown && splitterRect.Contains(Event.current.mousePosition))
         {
             isDraggingSplitter = true;
             Event.current.Use();
         }
+
         if (isDraggingSplitter)
         {
             splitRatio = Event.current.mousePosition.x / totalRect.width;
-            if (Event.current.type == EventType.MouseUp) isDraggingSplitter = false;
+            splitRatio = Mathf.Clamp(splitRatio, minPanelWidth / totalRect.width, 1f - (minPanelWidth + splitterWidth) / totalRect.width);
             Repaint();
         }
-        EditorGUI.DrawRect(splitterRect, new Color(0.3f, 0.3f, 0.3f, 1f));
 
-        // Settings
-        GUILayout.BeginArea(settingsRect);
-        DrawSettings();
-        GUILayout.EndArea();
+        // Preview panel (right)
+        if (cloudData != null && nodeIds.Count > 0)
+        {
+            HandlePreviewEvents(rightRect);
+            if (Event.current.type == EventType.Repaint)
+                RenderPreview(rightRect);
+        }
+        else
+        {
+            EditorGUI.DrawRect(rightRect, new Color(0.15f, 0.15f, 0.15f, 1f));
+            if (cloudData == null)
+            {
+                GUI.Label(rightRect, "Load a BehaviorCloudData asset", new GUIStyle(EditorStyles.centeredGreyMiniLabel)
+                { fontSize = 14, alignment = TextAnchor.MiddleCenter });
+            }
+        }
 
         // Sync preview window
         if (previewWindow != null && Event.current.type == EventType.Repaint)
