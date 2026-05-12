@@ -144,6 +144,36 @@ public sealed class DecisionBrain : MonoBehaviour
         }
     }
 
+    public void GetLearnableOffsets(float[] buffer)
+    {
+        int idx = 0;
+        for (int b = 0; b < behaviorNodes.Count; b++)
+        {
+            var conns = behaviorNodes[b].Connections;
+            for (int c = 0; c < conns.Count; c++)
+            {
+                var conn = conns[c];
+                if (conn != null && conn.IsLearnable)
+                    buffer[idx++] = conn.LearnedOffset;
+            }
+        }
+    }
+
+    public void SetLearnableOffsets(float[] offsets)
+    {
+        int idx = 0;
+        for (int b = 0; b < behaviorNodes.Count; b++)
+        {
+            var conns = behaviorNodes[b].Connections;
+            for (int c = 0; c < conns.Count; c++)
+            {
+                var conn = conns[c];
+                if (conn != null && conn.IsLearnable)
+                    conn.SetLearnedOffset(offsets[idx++]);
+            }
+        }
+    }
+
     public void AddBehaviorNode(BehaviorNode node)
     {
         if (node == null) return;

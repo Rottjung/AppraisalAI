@@ -30,6 +30,10 @@ public class GeneticTrainer : MonoBehaviour
     private int weightCount;
     private float spawnY;
 
+    // Preserved best brain state between generations
+    private BehaviorCloud bestCloud;
+    private float[] bestLearnedOffsets;
+
     private class Genome
     {
         public float[] weights;
@@ -79,7 +83,7 @@ public class GeneticTrainer : MonoBehaviour
         DecisionBrain templateBrain = creaturePrefab.GetComponentInChildren<DecisionBrain>();
         if (templateBrain == null)
         {
-            Debug.LogError("GeneticTrainer: creaturePrefab has no DecisionBrain component");
+            Debug.LogError("GeneticTrainer: creaturePrefab has no DecisionBrain");
             return;
         }
 
@@ -91,8 +95,10 @@ public class GeneticTrainer : MonoBehaviour
         }
 
         spawnY = creaturePrefab.transform.position.y;
-        if (spawnY == 0f)
-            spawnY = 0.5f;
+        if (spawnY == 0f) spawnY = 0.5f;
+
+        bestCloud = new BehaviorCloud();
+        bestLearnedOffsets = new float[weightCount];
 
         isRunning = true;
         currentGeneration = 0;
@@ -102,7 +108,6 @@ public class GeneticTrainer : MonoBehaviour
     private void Update()
     {
         if (!isRunning) return;
-
         generationTimer -= Time.deltaTime;
         if (generationTimer <= 0f)
             EndGeneration();
@@ -146,7 +151,16 @@ public class GeneticTrainer : MonoBehaviour
 
             var brain = go.GetComponentInChildren<DecisionBrain>();
             if (brain != null)
+            {
                 brain.SetLearnableWeights(genomes[i].weights);
+
+                // Re-apply preserved learned state from the best creature of the previous gen
+                if (currentGeneration > 0)
+                {
+                    brain.SetLearnableOffsets(bestLearnedOffsets);
+                    brain.Cloud.CopyFrom(bestCloud);
+                }
+            }
 
             var controller = go.GetComponentInChildren<CreatureBrainController>();
             if (controller != null)
@@ -170,10 +184,10 @@ public class GeneticTrainer : MonoBehaviour
 
     private void EndGeneration()
     {
+        // Evaluate fitness
         for (int i = 0; i < creatures.Count; i++)
         {
             if (creatures[i] == null) continue;
-
             var c = creatures[i];
             genomes[i].fitness =
                 c.totalTimeAlive * fitnessTimeAlive +
@@ -185,7 +199,19 @@ public class GeneticTrainer : MonoBehaviour
 
         genomes.Sort((a, b) => b.fitness.CompareTo(a.fitness));
 
-        Debug.Log($"Gen {currentGeneration + 1}: best={genomes[0].fitness:F2} top={string.Join(", ", genomes.GetRange(0, Mathf.Min(topN, genomes.Count)).ConvertAll(g => g.fitness.ToString("F2")))}");
+        // Save best creature's learned state before destroying
+        int bestIdx = genomes.Count > 0 ? genomes.IndexOf(genomes[0]) : -1;
+        if (bestIdx >= 0 && bestIdx < creatures.Count && creatures[bestIdx] != null)
+        {
+            var bestBrain = creatures[bestIdx].GetComponentInChildren<DecisionBrain>();
+            if (bestBrain != null)
+            {
+                bestBrain.GetLearnableOffsets(bestLearnedOffsets);
+                bestCloud.CopyFrom(bestBrain.Cloud);
+            }
+        }
+
+        Debug.Log($"Gen {currentGeneration + 1}: best={genomes[0].fitness:F2} cloud={bestCloud.Records.Count}recs");
 
         currentGeneration++;
         BreedNextGeneration();

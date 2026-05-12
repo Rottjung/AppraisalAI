@@ -59,6 +59,21 @@ public sealed class BehaviorCloud
             records.RemoveAt(0);
     }
 
+    public void CopyFrom(BehaviorCloud other)
+    {
+        records.Clear();
+        foreach (var record in other.records)
+        {
+            if (record == null) continue;
+            var copy = new BehaviorRecord(record.Id, record.PayloadId);
+            foreach (var coord in record.Coordinates)
+                copy.AddCoordinate(new BehaviorCoordinate(coord.BehaviorNodeId, coord.Value, coord.Weight));
+            foreach (var filter in record.Filters)
+                copy.AddFilter(filter);
+            records.Add(copy);
+        }
+    }
+
     public void Clear()
     {
         records.Clear();
