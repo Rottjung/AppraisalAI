@@ -81,8 +81,9 @@ public class LearningController : MonoBehaviour
                 {
                     new RewardTermDefinition("foodConsumed", RewardEvaluationMode.Delta, 2f),
                     new RewardTermDefinition("isDead", RewardEvaluationMode.EndValue, -3f),
-                    new RewardTermDefinition("energy", RewardEvaluationMode.Delta, 0.5f),
-                    new RewardTermDefinition("health", RewardEvaluationMode.Delta, 0.5f),
+                    new RewardTermDefinition("hunger", RewardEvaluationMode.EndValue, -0.5f),
+                    new RewardTermDefinition("energy", RewardEvaluationMode.Delta, 0.3f),
+                    new RewardTermDefinition("health", RewardEvaluationMode.Delta, 0.3f),
                 },
                 3f);
             episodeDefinitions.Add(def);
@@ -96,9 +97,9 @@ public class LearningController : MonoBehaviour
                 new List<string> { "Fear" },
                 new List<RewardTermDefinition>
                 {
-                    new RewardTermDefinition("health", RewardEvaluationMode.Delta, 1.5f),
+                    new RewardTermDefinition("health", RewardEvaluationMode.Delta, 1f),
                     new RewardTermDefinition("isDead", RewardEvaluationMode.EndValue, -3f),
-                    new RewardTermDefinition("energy", RewardEvaluationMode.Delta, -0.3f),
+                    new RewardTermDefinition("energy", RewardEvaluationMode.Delta, 0.5f),
                     new RewardTermDefinition("enemyProximity", RewardEvaluationMode.EndValue, -1f),
                 },
                 3f);
@@ -114,8 +115,8 @@ public class LearningController : MonoBehaviour
                 new List<RewardTermDefinition>
                 {
                     new RewardTermDefinition("enemyKilled", RewardEvaluationMode.Delta, 3f),
-                    new RewardTermDefinition("health", RewardEvaluationMode.Delta, 0.5f),
-                    new RewardTermDefinition("energy", RewardEvaluationMode.Delta, -0.5f),
+                    new RewardTermDefinition("health", RewardEvaluationMode.Delta, 1f),
+                    new RewardTermDefinition("energy", RewardEvaluationMode.Delta, 0.5f),
                     new RewardTermDefinition("isDead", RewardEvaluationMode.EndValue, -3f),
                 },
                 3f);
