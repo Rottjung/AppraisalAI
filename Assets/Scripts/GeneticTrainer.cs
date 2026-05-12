@@ -30,8 +30,7 @@ public class GeneticTrainer : MonoBehaviour
     private int weightCount;
     private float spawnY;
 
-    // Preserved best brain state between generations
-    private BehaviorCloud bestCloud;
+    // Learned offsets persist in-memory (not stored in SO)
     private float[] bestLearnedOffsets;
 
     private class Genome
@@ -97,7 +96,6 @@ public class GeneticTrainer : MonoBehaviour
         spawnY = creaturePrefab.transform.position.y;
         if (spawnY == 0f) spawnY = 0.5f;
 
-        bestCloud = new BehaviorCloud();
         bestLearnedOffsets = new float[weightCount];
 
         isRunning = true;
@@ -154,12 +152,10 @@ public class GeneticTrainer : MonoBehaviour
             {
                 brain.SetLearnableWeights(genomes[i].weights);
 
-                // Re-apply preserved learned state from the best creature of the previous gen
+                // Re-apply learned offsets from best creature of previous gen
+                // (cloud records are restored via loadSource→Awake or stay empty for gen 1)
                 if (currentGeneration > 0)
-                {
                     brain.SetLearnableOffsets(bestLearnedOffsets);
-                    brain.Cloud.CopyFrom(bestCloud);
-                }
             }
 
             var controller = go.GetComponentInChildren<CreatureBrainController>();
@@ -184,7 +180,6 @@ public class GeneticTrainer : MonoBehaviour
 
     private void EndGeneration()
     {
-        // Evaluate fitness
         for (int i = 0; i < creatures.Count; i++)
         {
             if (creatures[i] == null) continue;
@@ -199,7 +194,7 @@ public class GeneticTrainer : MonoBehaviour
 
         genomes.Sort((a, b) => b.fitness.CompareTo(a.fitness));
 
-        // Save best creature's learned state before destroying
+        // Save best creature's learned offsets + cloud to SO
         int bestIdx = genomes.Count > 0 ? genomes.IndexOf(genomes[0]) : -1;
         if (bestIdx >= 0 && bestIdx < creatures.Count && creatures[bestIdx] != null)
         {
@@ -207,11 +202,17 @@ public class GeneticTrainer : MonoBehaviour
             if (bestBrain != null)
             {
                 bestBrain.GetLearnableOffsets(bestLearnedOffsets);
-                bestCloud.CopyFrom(bestBrain.Cloud);
+
+                // Persist cloud to saveTarget SO (which should be the same as loadSource on the prefab)
+                if (bestBrain.SaveTarget != null)
+                {
+                    bestBrain.SaveTarget.CopyFrom(bestBrain.Cloud);
+                    Debug.Log($"Gen {currentGeneration + 1}: saved cloud ({bestBrain.Cloud.Records.Count} records) to {bestBrain.SaveTarget.name}");
+                }
             }
         }
 
-        Debug.Log($"Gen {currentGeneration + 1}: best={genomes[0].fitness:F2} cloud={bestCloud.Records.Count}recs");
+        Debug.Log($"Gen {currentGeneration + 1}: best={genomes[0].fitness:F2}");
 
         currentGeneration++;
         BreedNextGeneration();
