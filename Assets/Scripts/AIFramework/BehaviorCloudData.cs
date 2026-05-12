@@ -62,6 +62,47 @@ public class BehaviorCloudData : ScriptableObject
         }
     }
 
+    public void CrossbreedFrom(BehaviorCloudData a, BehaviorCloudData b, float mutationRate, float mutationStrength)
+    {
+        records.Clear();
+        learnedOffsets = new float[0];
+
+        // Merge all records from both parents
+        var seenIds = new HashSet<string>();
+        for (int p = 0; p < 2; p++)
+        {
+            var source = p == 0 ? a : b;
+            if (source == null) continue;
+            foreach (var record in source.records)
+            {
+                if (record == null) continue;
+                string key = $"{record.PayloadId}_{record.Id}";
+                if (!seenIds.Add(key)) continue;
+                var copy = new BehaviorRecord(record.Id, record.PayloadId);
+                foreach (var coord in record.Coordinates)
+                    copy.AddCoordinate(new BehaviorCoordinate(coord.BehaviorNodeId, coord.Value, coord.Weight));
+                foreach (var filter in record.Filters)
+                    copy.AddFilter(filter);
+                records.Add(copy);
+            }
+        }
+
+        // Blend offsets: average parents, then mutate
+        int len = Mathf.Max(a?.learnedOffsets.Length ?? 0, b?.learnedOffsets.Length ?? 0);
+        if (len > 0)
+        {
+            learnedOffsets = new float[len];
+            for (int i = 0; i < len; i++)
+            {
+                float va = a != null && i < a.learnedOffsets.Length ? a.learnedOffsets[i] : 0f;
+                float vb = b != null && i < b.learnedOffsets.Length ? b.learnedOffsets[i] : 0f;
+                learnedOffsets[i] = (va + vb) * 0.5f;
+                if (Random.value < mutationRate)
+                    learnedOffsets[i] += Random.Range(-mutationStrength, mutationStrength);
+            }
+        }
+    }
+
     public void SetOffsets(float[] offsets)
     {
         if (offsets == null || offsets.Length == 0)

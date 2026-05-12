@@ -30,6 +30,7 @@ public class GeneticTrainer : MonoBehaviour
     private int weightCount;
     private float spawnY;
     private BehaviorCloudData seedSO;
+    private List<BehaviorCloudData> nextSOs = new();
 
     private class Genome
     {
@@ -154,8 +155,12 @@ public class GeneticTrainer : MonoBehaviour
                 // Every creature gets its own private SO — a deep copy of the seed SO
                 var creatureSO = ScriptableObject.CreateInstance<BehaviorCloudData>();
                 creatureSO.name = $"Creature_{i}_Brain";
-                if (seedSO != null)
+
+                if (i < nextSOs.Count && nextSOs[i] != null)
+                    creatureSO.CopyFromSO(nextSOs[i]);
+                else if (seedSO != null)
                     creatureSO.CopyFromSO(seedSO);
+
                 brain.SetSaveTarget(creatureSO);
                 brain.SetLoadSource(creatureSO);
             }
@@ -196,33 +201,52 @@ public class GeneticTrainer : MonoBehaviour
 
         genomes.Sort((a, b) => b.fitness.CompareTo(a.fitness));
 
-        // Save the best creature to its private SO, then make that SO the next gen's seed
-        int bestIdx = genomes.Count > 0 ? genomes.IndexOf(genomes[0]) : -1;
-        if (bestIdx >= 0 && bestIdx < creatures.Count && creatures[bestIdx] != null)
+        // Save all top creatures to their private SOs
+        var topBrains = new List<DecisionBrain>();
+        for (int i = 0; i < Mathf.Min(topN, creatures.Count); i++)
         {
-            var bestBrain = creatures[bestIdx].GetComponentInChildren<DecisionBrain>();
-            if (bestBrain != null)
+            int idx = genomes.IndexOf(genomes[i]);
+            if (idx >= 0 && idx < creatures.Count && creatures[idx] != null)
             {
-                bestBrain.SaveToTarget();
-                seedSO = bestBrain.SaveTarget;
+                var brain = creatures[idx].GetComponentInChildren<DecisionBrain>();
+                if (brain != null)
+                {
+                    brain.SaveToTarget();
+                    topBrains.Add(brain);
+                }
             }
         }
 
-        Debug.Log($"Gen {currentGeneration + 1}: best={genomes[0].fitness:F2}");
+        Debug.Log($"Gen {currentGeneration + 1}: best={genomes[0].fitness:F2} top={genomes[0].fitness:F2},{genomes[Mathf.Min(1, genomes.Count-1)].fitness:F2},{genomes[Mathf.Min(2, genomes.Count-1)].fitness:F2}");
 
         currentGeneration++;
-        BreedNextGeneration();
+        BreedNextGeneration(topBrains);
         ClearCreatures();
         StartGeneration();
     }
 
-    private void BreedNextGeneration()
+    private void BreedNextGeneration(List<DecisionBrain> topBrains)
     {
         var nextGen = new List<Genome>();
+        nextSOs.Clear();
 
+        // Keep elite: top N genomes, each gets a copy of its own parent SO
         for (int i = 0; i < topN && i < genomes.Count; i++)
+        {
             nextGen.Add(genomes[i].Clone());
+            if (i < topBrains.Count && topBrains[i]?.SaveTarget != null)
+            {
+                var so = ScriptableObject.CreateInstance<BehaviorCloudData>();
+                so.CopyFromSO(topBrains[i].SaveTarget);
+                nextSOs.Add(so);
+            }
+            else
+            {
+                nextSOs.Add(null);
+            }
+        }
 
+        // Fill rest with crossbred SOs + mutated genomes
         while (nextGen.Count < populationSize)
         {
             var parentA = genomes[Random.Range(0, topN)];
@@ -230,6 +254,20 @@ public class GeneticTrainer : MonoBehaviour
             var child = Genome.Crossover(parentA, parentB);
             child.Mutate(mutationRate, mutationStrength);
             nextGen.Add(child);
+
+            // Crossbreed and mutate the SOs
+            int idxA = Random.Range(0, topBrains.Count);
+            int idxB = Random.Range(0, topBrains.Count);
+            var soA = topBrains[idxA]?.SaveTarget;
+            var soB = topBrains[idxB]?.SaveTarget;
+            var childSO = ScriptableObject.CreateInstance<BehaviorCloudData>();
+            if (soA != null && soB != null)
+                childSO.CrossbreedFrom(soA, soB, mutationRate, mutationStrength);
+            else if (soA != null)
+                childSO.CopyFromSO(soA);
+            else if (soB != null)
+                childSO.CopyFromSO(soB);
+            nextSOs.Add(childSO);
         }
 
         genomes = nextGen;
