@@ -265,6 +265,26 @@ public class CloudVisualizer : EditorWindow
         Texture result = preview.EndPreview();
 
         GUI.DrawTexture(rect, result, ScaleMode.StretchToFill, false);
+
+        // Draw label text on top of the preview
+        var labelStyle = new GUIStyle(EditorStyles.miniLabel);
+        labelStyle.alignment = TextAnchor.LowerCenter;
+        labelStyle.fontSize = 11;
+        labelStyle.normal.textColor = Color.white;
+
+        foreach (var record in cloudData.Records)
+        {
+            if (record == null) continue;
+            Vector3 worldPos = GetPosition(record);
+            Vector3 viewPos = preview.camera.WorldToViewportPoint(worldPos);
+            if (viewPos.z < 0f) continue;
+
+            float labelX = rect.x + viewPos.x * rect.width;
+            float labelY = rect.y + (1f - viewPos.y) * rect.height;
+
+            var labelRect = new Rect(labelX - 50, labelY + 4, 100, 20);
+            GUI.Label(labelRect, record.PayloadId, labelStyle);
+        }
     }
 
     private Vector3 GetPosition(BehaviorRecord record)
