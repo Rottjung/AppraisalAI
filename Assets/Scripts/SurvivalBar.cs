@@ -19,7 +19,7 @@ public class SurvivalBar : MonoBehaviour
     {
         if (!fill)
             fill = GetComponent<Image>();
-        sensors = FindFirstObjectByType<Sensors>();
+        sensors = GetComponentInParent<Sensors>();
     }
 
     void Update()

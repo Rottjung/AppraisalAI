@@ -13,7 +13,6 @@ public class GeneticTrainer : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private GameObject creaturePrefab;
-    [SerializeField] private DecisionBrain brainTemplate;
     [SerializeField] private LevelBounds levelBounds;
 
     [Header("Fitness Weights")]
@@ -29,16 +28,14 @@ public class GeneticTrainer : MonoBehaviour
     private float generationTimer;
     private bool isRunning;
     private int weightCount;
+    private float spawnY;
 
     private class Genome
     {
         public float[] weights;
         public float fitness;
 
-        public Genome(int count)
-        {
-            weights = new float[count];
-        }
+        public Genome(int count) { weights = new float[count]; }
 
         public void Randomize(float range)
         {
@@ -73,18 +70,29 @@ public class GeneticTrainer : MonoBehaviour
 
     private void Start()
     {
-        if (creaturePrefab == null || brainTemplate == null || levelBounds == null)
+        if (creaturePrefab == null || levelBounds == null)
         {
-            Debug.LogError("GeneticTrainer: assign creaturePrefab, brainTemplate, and levelBounds");
+            Debug.LogError("GeneticTrainer: assign creaturePrefab and levelBounds");
             return;
         }
 
-        weightCount = brainTemplate.GetLearnableWeightCount();
-        if (weightCount == 0)
+        DecisionBrain templateBrain = creaturePrefab.GetComponentInChildren<DecisionBrain>();
+        if (templateBrain == null)
         {
-            Debug.LogError("GeneticTrainer: no learnable weights found in brain template");
+            Debug.LogError("GeneticTrainer: creaturePrefab has no DecisionBrain component");
             return;
         }
+
+        weightCount = templateBrain.GetLearnableWeightCount();
+        if (weightCount == 0)
+        {
+            Debug.LogError("GeneticTrainer: no learnable weights found in brain");
+            return;
+        }
+
+        spawnY = creaturePrefab.transform.position.y;
+        if (spawnY == 0f)
+            spawnY = 0.5f;
 
         isRunning = true;
         currentGeneration = 0;
@@ -109,10 +117,8 @@ public class GeneticTrainer : MonoBehaviour
             return;
         }
 
-        // Create genomes for this generation
         if (genomes.Count == 0)
         {
-            // First generation: random
             for (int i = 0; i < populationSize; i++)
             {
                 var g = new Genome(weightCount);
@@ -123,7 +129,7 @@ public class GeneticTrainer : MonoBehaviour
 
         SpawnCreatures();
         generationTimer = timePerGeneration;
-        Debug.Log($"GeneticTrainer: Generation {currentGeneration + 1}/{generations} started");
+        Debug.Log($"Gen {currentGeneration + 1}/{generations} starting");
     }
 
     private void SpawnCreatures()
@@ -133,7 +139,7 @@ public class GeneticTrainer : MonoBehaviour
         for (int i = 0; i < populationSize; i++)
         {
             Vector3 pos = levelBounds.GetRandomPointInside();
-            pos.y = creaturePrefab.transform.position.y;
+            pos.y = spawnY;
 
             GameObject go = Instantiate(creaturePrefab, pos, Quaternion.identity);
             go.name = $"Creature_{i}";
@@ -142,7 +148,7 @@ public class GeneticTrainer : MonoBehaviour
             if (brain != null)
                 brain.SetLearnableWeights(genomes[i].weights);
 
-            var controller = go.GetComponent<CreatureBrainController>();
+            var controller = go.GetComponentInChildren<CreatureBrainController>();
             if (controller != null)
             {
                 controller.ignoreMaxLifetimes = true;
@@ -163,34 +169,25 @@ public class GeneticTrainer : MonoBehaviour
 
     private void EndGeneration()
     {
-        float genEndTime = Time.time;
-
-        // Evaluate fitness for each creature
         for (int i = 0; i < creatures.Count; i++)
         {
             if (creatures[i] == null) continue;
 
             var c = creatures[i];
-            float timeAlive = c.totalTimeAlive;
-
             genomes[i].fitness =
-                timeAlive * fitnessTimeAlive +
+                c.totalTimeAlive * fitnessTimeAlive +
                 c.totalFoodConsumed * fitnessFoodEaten +
                 c.totalEnemyKilled * fitnessEnemyKilled +
                 c.avgEnergy * fitnessAvgEnergy +
                 c.avgHealth * fitnessAvgHealth;
         }
 
-        // Sort by fitness (descending)
         genomes.Sort((a, b) => b.fitness.CompareTo(a.fitness));
 
         Debug.Log($"Gen {currentGeneration + 1}: best={genomes[0].fitness:F2} top={string.Join(", ", genomes.GetRange(0, Mathf.Min(topN, genomes.Count)).ConvertAll(g => g.fitness.ToString("F2")))}");
 
         currentGeneration++;
-
-        // Breed next generation
         BreedNextGeneration();
-
         ClearCreatures();
         StartGeneration();
     }
@@ -199,11 +196,9 @@ public class GeneticTrainer : MonoBehaviour
     {
         var nextGen = new List<Genome>();
 
-        // Keep top N
         for (int i = 0; i < topN && i < genomes.Count; i++)
             nextGen.Add(genomes[i].Clone());
 
-        // Fill rest by crossover + mutation
         while (nextGen.Count < populationSize)
         {
             var parentA = genomes[Random.Range(0, topN)];
