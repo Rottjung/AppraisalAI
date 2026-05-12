@@ -18,12 +18,17 @@ public class CloudVisualizer : EditorWindow
     }
 
     private Mapping mapX, mapY, mapZ, mapSize, mapColor;
-    private float pointScale = 1f;
+    private float spacingMultiplier = 10f;
+    private float pointScale = 0.5f;
     private bool drawLabels = true;
 
     private List<string> nodeIds = new();
     private string[] nodeOptions;
     private bool subscribed;
+
+    // Per-record visibility toggles
+    private Dictionary<BehaviorRecord, bool> recordVisibility = new();
+    private bool showAll = true;
 
     [MenuItem("Tools/Cloud Visualizer")]
     private static void Open()
@@ -85,6 +90,16 @@ public class CloudVisualizer : EditorWindow
         nodeOptions[0] = "Constant";
         for (int i = 0; i < nodeIds.Count; i++)
             nodeOptions[i + 1] = nodeIds[i];
+
+        // Initialize all records as visible
+        if (cloudData != null)
+        {
+            foreach (var record in cloudData.Records)
+            {
+                if (record != null && !recordVisibility.ContainsKey(record))
+                    recordVisibility[record] = true;
+            }
+        }
     }
 
     private int NodeIndex(Mapping m)
@@ -109,6 +124,7 @@ public class CloudVisualizer : EditorWindow
         if (newData != cloudData)
         {
             cloudData = newData;
+            recordVisibility.Clear();
             RefreshNodeList();
         }
 
@@ -142,6 +158,9 @@ public class CloudVisualizer : EditorWindow
         mapZ = MakeMapping(zIdx, mapZ.constantValue, mapZ.constantColor);
 
         EditorGUILayout.Space();
+        spacingMultiplier = EditorGUILayout.FloatField("Spacing Multiplier", spacingMultiplier);
+
+        EditorGUILayout.Space();
 
         int sizeIdx = EditorGUILayout.Popup("Size", NodeIndex(mapSize), nodeOptions);
         if (sizeIdx == 0)
@@ -153,16 +172,50 @@ public class CloudVisualizer : EditorWindow
             mapColor.constantColor = EditorGUILayout.ColorField("Constant Color", mapColor.constantColor);
         mapColor = MakeMapping(colorIdx, mapColor.constantValue, mapColor.constantColor);
 
+        if (colorIdx > 0)
+            EditorGUILayout.HelpBox("Color = lerp(white, chosen constant color, coord value)", MessageType.Info);
+
         EditorGUILayout.Space();
-        pointScale = EditorGUILayout.Slider("Point Scale", pointScale, 0.1f, 10f);
+        pointScale = EditorGUILayout.Slider("Point Scale", pointScale, 0.01f, 5f);
         drawLabels = EditorGUILayout.Toggle("Draw Labels", drawLabels);
 
         EditorGUILayout.Space();
 
         if (GUILayout.Button("Fit View to Points"))
-        {
             FramePoints();
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Behaviors", EditorStyles.boldLabel);
+
+        showAll = EditorGUILayout.Toggle("Show All", showAll);
+        if (showAll)
+        {
+            foreach (var key in new List<BehaviorRecord>(recordVisibility.Keys))
+                recordVisibility[key] = true;
         }
+
+        EditorGUI.indentLevel++;
+        foreach (var record in cloudData.Records)
+        {
+            if (record == null) continue;
+            if (!recordVisibility.ContainsKey(record))
+                recordVisibility[record] = true;
+
+            Color c = GetColor(record);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.Toggle(recordVisibility[record], GUILayout.Width(20));
+            EditorGUILayout.LabelField(record.PayloadId, GUILayout.Width(100));
+
+            var previewRect = EditorGUILayout.GetControlRect(GUILayout.Width(30), GUILayout.Height(16));
+            EditorGUI.DrawRect(previewRect, c);
+
+            string coordStr = "";
+            foreach (var coord in record.Coordinates)
+                coordStr += $"{coord.BehaviorNodeId}={coord.Value:F2} ";
+            EditorGUILayout.LabelField(coordStr);
+            EditorGUILayout.EndHorizontal();
+        }
+        EditorGUI.indentLevel--;
 
         EditorGUILayout.EndScrollView();
     }
@@ -172,12 +225,13 @@ public class CloudVisualizer : EditorWindow
         if (cloudData == null || nodeIds.Count == 0)
             return;
 
-        Handles.BeginGUI();
-        Handles.EndGUI();
-
         foreach (var record in cloudData.Records)
         {
             if (record == null) continue;
+
+            bool visible;
+            if (!recordVisibility.TryGetValue(record, out visible) || !visible)
+                continue;
 
             Vector3 pos = GetPosition(record);
             float size = GetSize(record);
@@ -198,10 +252,11 @@ public class CloudVisualizer : EditorWindow
 
     private Vector3 GetPosition(BehaviorRecord record)
     {
-        float x = GetChannelValue(record, mapX);
-        float y = GetChannelValue(record, mapY);
-        float z = GetChannelValue(record, mapZ);
-        return new Vector3(x, y, z);
+        return new Vector3(
+            GetChannelValue(record, mapX) * spacingMultiplier,
+            GetChannelValue(record, mapY) * spacingMultiplier,
+            GetChannelValue(record, mapZ) * spacingMultiplier
+        );
     }
 
     private float GetSize(BehaviorRecord record)
@@ -212,7 +267,9 @@ public class CloudVisualizer : EditorWindow
     private Color GetColor(BehaviorRecord record)
     {
         float val = GetChannelValue(record, mapColor);
-        return mapColor.source == ChannelSource.Constant ? mapColor.constantColor : Color.HSVToRGB(val, 0.8f, 0.9f);
+        if (mapColor.source == ChannelSource.Constant)
+            return mapColor.constantColor;
+        return Color.Lerp(Color.white, mapColor.constantColor, val);
     }
 
     private float GetChannelValue(BehaviorRecord record, Mapping m)
