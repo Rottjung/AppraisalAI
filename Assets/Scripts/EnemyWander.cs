@@ -40,7 +40,43 @@ public class EnemyWander : MonoBehaviour
         health = maxHealth;
         if (levelBounds == null)
             levelBounds = FindFirstObjectByType<LevelBounds>();
-        cachedCreature = FindFirstObjectByType<CreatureBrainController>();
+
+        CreatureBrainController.OnCreatureSpawned += OnCreatureSpawned;
+        CreatureBrainController.OnCreatureDied += OnCreatureDied;
+    }
+
+    private void OnDestroy()
+    {
+        CreatureBrainController.OnCreatureSpawned -= OnCreatureSpawned;
+        CreatureBrainController.OnCreatureDied -= OnCreatureDied;
+    }
+
+    private void OnCreatureSpawned(CreatureBrainController creature)
+    {
+        cachedCreature = creature;
+        // If we were idle with no target and a creature appears, start chasing
+        if (!isChasing && !hasTarget && cachedCreature != null)
+        {
+            float dist = Vector3.Distance(transform.position, cachedCreature.transform.position);
+            if (dist <= detectionRadius)
+            {
+                creatureTarget = cachedCreature.transform;
+                isChasing = true;
+                controller.Speed = chaseSpeed;
+                hasTarget = false;
+            }
+        }
+    }
+
+    private void OnCreatureDied(CreatureBrainController creature)
+    {
+        if (cachedCreature == creature)
+        {
+            cachedCreature = null;
+            isChasing = false;
+            creatureTarget = null;
+            controller.Speed = defaultSpeed;
+        }
     }
 
     private void Start()
@@ -92,15 +128,11 @@ public class EnemyWander : MonoBehaviour
 
     private void FindCreature()
     {
-        if (cachedCreature == null)
+        if (cachedCreature == null || cachedCreature.gameObject == null)
         {
-            cachedCreature = FindFirstObjectByType<CreatureBrainController>();
-            if (cachedCreature == null)
-            {
-                isChasing = false;
-                creatureTarget = null;
-                return;
-            }
+            isChasing = false;
+            creatureTarget = null;
+            return;
         }
 
         float dist = Vector3.Distance(transform.position, cachedCreature.transform.position);

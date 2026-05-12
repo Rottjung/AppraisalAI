@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class CreatureBrainController : MonoBehaviour
 {
+    public static event System.Action<CreatureBrainController> OnCreatureSpawned;
+    public static event System.Action<CreatureBrainController> OnCreatureDied;
     [SerializeField] private DecisionBrain brain;
     [SerializeField] private Controller controller;
     [SerializeField] private Sensors sensors;
@@ -125,6 +127,7 @@ public class CreatureBrainController : MonoBehaviour
         sensors?.EnsureSignal("health", 1f);
         learningState?.EnsureSignal("enemyKilled", SignalType.Int, 0);
         SetupAttackDrive();
+        OnCreatureSpawned?.Invoke(this);
     }
 
     private void SetupAttackDrive()
@@ -287,6 +290,7 @@ public class CreatureBrainController : MonoBehaviour
         if (isDead)
             return;
 
+        OnCreatureDied?.Invoke(this);
         learningState?.Apply("isDead", 1f, false);
         EndActiveEpisode();
 
@@ -342,6 +346,8 @@ public class CreatureBrainController : MonoBehaviour
 
         if (logDecisions)
             Debug.Log($"Creature respawned. Lifetime {currentLifetime}/{maxLifetimes}", this);
+
+        OnCreatureSpawned?.Invoke(this);
     }
 
     private void SetMoveTarget(Vector3 target)

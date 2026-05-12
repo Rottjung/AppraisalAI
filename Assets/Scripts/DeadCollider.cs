@@ -13,8 +13,12 @@ public class DeadCollider : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.collider.CompareTag("Enemy"))
-        {
             brain?.TakeDamage(damageAmount);
-        }
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        if (collision.collider.CompareTag("Enemy"))
+            brain?.TakeDamage(damageAmount);
     }
 }
