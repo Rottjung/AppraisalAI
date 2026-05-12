@@ -99,6 +99,51 @@ public sealed class DecisionBrain : MonoBehaviour
         RebuildCaches();
     }
 
+    public int GetLearnableWeightCount()
+    {
+        int count = 0;
+        for (int b = 0; b < behaviorNodes.Count; b++)
+        {
+            var conns = behaviorNodes[b].Connections;
+            for (int c = 0; c < conns.Count; c++)
+            {
+                if (conns[c] != null && conns[c].IsLearnable)
+                    count++;
+            }
+        }
+        return count;
+    }
+
+    public void GetLearnableWeights(float[] buffer)
+    {
+        int idx = 0;
+        for (int b = 0; b < behaviorNodes.Count; b++)
+        {
+            var conns = behaviorNodes[b].Connections;
+            for (int c = 0; c < conns.Count; c++)
+            {
+                var conn = conns[c];
+                if (conn != null && conn.IsLearnable)
+                    buffer[idx++] = conn.Weight;
+            }
+        }
+    }
+
+    public void SetLearnableWeights(float[] weights)
+    {
+        int idx = 0;
+        for (int b = 0; b < behaviorNodes.Count; b++)
+        {
+            var conns = behaviorNodes[b].Connections;
+            for (int c = 0; c < conns.Count; c++)
+            {
+                var conn = conns[c];
+                if (conn != null && conn.IsLearnable)
+                    conn.SetWeight(weights[idx++]);
+            }
+        }
+    }
+
     public void AddBehaviorNode(BehaviorNode node)
     {
         if (node == null) return;

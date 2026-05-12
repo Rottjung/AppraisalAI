@@ -75,6 +75,12 @@ public class CreatureBrainController : MonoBehaviour
     [Header("Episodes")]
     [SerializeField] private int maxLifetimes = 100;
     [SerializeField] private float respawnDelay = 1f;
+    [System.NonSerialized] public bool ignoreMaxLifetimes;
+    [System.NonSerialized] public float totalTimeAlive;
+    [System.NonSerialized] public int totalFoodConsumed;
+    [System.NonSerialized] public int totalEnemyKilled;
+    [System.NonSerialized] public float avgEnergy;
+    [System.NonSerialized] public float avgHealth;
 
     [Header("Debug")]
     [SerializeField] private bool logDecisions = false;
@@ -194,6 +200,13 @@ public class CreatureBrainController : MonoBehaviour
         UpdateIdleTime();
         ApplyStarvationDamage(dt);
 
+        if (!isDead)
+        {
+            totalTimeAlive += dt;
+            avgEnergy = Mathf.Lerp(avgEnergy, sensors.GetValue("energy"), 0.01f);
+            avgHealth = Mathf.Lerp(avgHealth, health / maxHealth, 0.01f);
+        }
+
         if (Input.GetKeyDown(KeyCode.L))
             learningController.ToggleLog();
     }
@@ -223,6 +236,7 @@ public class CreatureBrainController : MonoBehaviour
 
     public void OnEnemyKilled()
     {
+        totalEnemyKilled++;
         learningState?.Apply("enemyKilled", 1f, true);
         if (logDecisions)
             Debug.Log("Creature killed an enemy!", this);
@@ -280,7 +294,7 @@ public class CreatureBrainController : MonoBehaviour
         if (logDecisions)
             Debug.Log($"Creature died. Lifetime {currentLifetime}/{maxLifetimes}", this);
 
-        if (currentLifetime >= maxLifetimes)
+        if (!ignoreMaxLifetimes && currentLifetime >= maxLifetimes)
         {
             debugText.text = "Done";
             if (logDecisions)
@@ -744,6 +758,7 @@ public class CreatureBrainController : MonoBehaviour
 
     private void ConsumeFood(GameObject food)
     {
+        totalFoodConsumed++;
         learningState?.Apply("foodConsumed", 1f, true);
         sensors.ApplyToSignal("hunger", -hungerRestore);
         sensors.ApplyToSignal("energy", energyRestoreOnEat);
