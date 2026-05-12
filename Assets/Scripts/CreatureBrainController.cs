@@ -127,8 +127,8 @@ public class CreatureBrainController : MonoBehaviour
 
         var idleDrive = new BehaviorNode("IdleDrive", "Idle Drive");
         idleDrive.SetActivationType(ActivationType.Clamped01);
-        idleDrive.SetBias(0.3f);
-        idleDrive.AddConnection(new Connection("energy", -0.8f));
+        idleDrive.SetBias(0.8f);
+        idleDrive.AddConnection(new Connection("energy", -1f));
         idleDrive.AddConnection(new Connection("enemyProximity", -0.5f));
         idleDrive.AddConnection(new Connection("health", -0.3f));
         brain.AddBehaviorNode(idleDrive);
