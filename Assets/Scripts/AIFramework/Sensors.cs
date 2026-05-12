@@ -172,6 +172,20 @@ public class Sensors : MonoBehaviour
         }
     }
 
+    public void ResetDriftSensor(string id)
+    {
+        for (int i = 0; i < sensorModules.Count; i++)
+        {
+            Sensor sensor = sensorModules[i];
+            if (sensor != null && sensor.SignalId == id && sensor.Type == SensorType.StateDrift)
+            {
+                var (sigId, val) = sensor.Initialize();
+                SetSignal(sigId, val);
+                return;
+            }
+        }
+    }
+
     public bool EnsureSignal(string id, float initialValue = 0f)
     {
         if (string.IsNullOrWhiteSpace(id))

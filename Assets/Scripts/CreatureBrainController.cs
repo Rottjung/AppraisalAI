@@ -303,8 +303,8 @@ public class CreatureBrainController : MonoBehaviour
 
         sensors?.SetSignal("health", 1f);
         brain?.SetInputRaw("health", 1f);
-        sensors?.SetSignal("energy", 1f);
-        sensors?.SetSignal("hunger", 0f);
+        sensors?.ResetDriftSensor("energy");
+        sensors?.ResetDriftSensor("hunger");
         sensors?.SetSignal("idleTime", 0f);
         learningState?.Apply("isDead", 0f, false);
 
