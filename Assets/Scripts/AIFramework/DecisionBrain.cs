@@ -33,11 +33,8 @@ public sealed class DecisionBrain : MonoBehaviour
     private void Awake()
     {
         RebuildCaches();
-        if (loadSource != null && loadSource.Records.Count > 0)
-        {
-            loadSource.CopyTo(behaviorCloud);
-            Debug.Log($"Cloud loaded from {loadSource.name} ({loadSource.Records.Count} records)", this);
-        }
+        if (loadSource != null)
+            LoadFromSource();
     }
 
     private void OnValidate()
@@ -375,36 +372,39 @@ public sealed class DecisionBrain : MonoBehaviour
         Debug.Log(candidate.ToString(), this);
     }
 
+    public void SaveToTarget()
+    {
+        if (saveTarget == null) return;
+        saveTarget.CopyFrom(behaviorCloud);
+
+        float[] offsets = new float[GetLearnableWeightCount()];
+        GetLearnableOffsets(offsets);
+        saveTarget.SetOffsets(offsets);
+
+        Debug.Log($"Saved to {saveTarget.name}: {behaviorCloud.Records.Count} records, {offsets.Length} offsets", this);
+    }
+
+    private void LoadFromSource()
+    {
+        if (loadSource == null) return;
+        loadSource.CopyTo(behaviorCloud);
+
+        var offsets = loadSource.LearnedOffsets;
+        if (offsets.Length > 0)
+            SetLearnableOffsets(offsets);
+
+        Debug.Log($"Loaded from {loadSource.name}: {loadSource.Records.Count} records, {offsets.Length} offsets", this);
+    }
+
     private void OnApplicationQuit()
     {
         if (saveOnQuit && saveTarget != null)
-        {
-            saveTarget.CopyFrom(behaviorCloud);
-            Debug.Log($"Cloud saved to {saveTarget.name} ({behaviorCloud.Records.Count} records)", this);
-        }
+            SaveToTarget();
     }
 
-    [ContextMenu("Save Cloud to Target")]
-    public void SaveCloud()
-    {
-        if (saveTarget == null)
-        {
-            Debug.LogWarning("No saveTarget assigned.", this);
-            return;
-        }
-        saveTarget.CopyFrom(behaviorCloud);
-        Debug.Log($"Cloud saved to {saveTarget.name} ({behaviorCloud.Records.Count} records)", this);
-    }
+    [ContextMenu("Save to Target")]
+    public void SaveCloud() { SaveToTarget(); }
 
-    [ContextMenu("Load Cloud from Source")]
-    public void LoadCloud()
-    {
-        if (loadSource == null)
-        {
-            Debug.LogWarning("No loadSource assigned.", this);
-            return;
-        }
-        loadSource.CopyTo(behaviorCloud);
-        Debug.Log($"Cloud loaded from {loadSource.name} ({loadSource.Records.Count} records)", this);
-    }
+    [ContextMenu("Load from Source")]
+    public void LoadCloud() { LoadFromSource(); }
 }

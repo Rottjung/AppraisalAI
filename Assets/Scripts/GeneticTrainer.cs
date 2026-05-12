@@ -30,9 +30,6 @@ public class GeneticTrainer : MonoBehaviour
     private int weightCount;
     private float spawnY;
 
-    // Learned offsets persist in-memory (not stored in SO)
-    private float[] bestLearnedOffsets;
-
     private class Genome
     {
         public float[] weights;
@@ -96,8 +93,6 @@ public class GeneticTrainer : MonoBehaviour
         spawnY = creaturePrefab.transform.position.y;
         if (spawnY == 0f) spawnY = 0.5f;
 
-        bestLearnedOffsets = new float[weightCount];
-
         isRunning = true;
         currentGeneration = 0;
         StartGeneration();
@@ -149,14 +144,7 @@ public class GeneticTrainer : MonoBehaviour
 
             var brain = go.GetComponentInChildren<DecisionBrain>();
             if (brain != null)
-            {
                 brain.SetLearnableWeights(genomes[i].weights);
-
-                // Re-apply learned offsets from best creature of previous gen
-                // (cloud records are restored via loadSource→Awake or stay empty for gen 1)
-                if (currentGeneration > 0)
-                    brain.SetLearnableOffsets(bestLearnedOffsets);
-            }
 
             var controller = go.GetComponentInChildren<CreatureBrainController>();
             if (controller != null)
@@ -194,22 +182,13 @@ public class GeneticTrainer : MonoBehaviour
 
         genomes.Sort((a, b) => b.fitness.CompareTo(a.fitness));
 
-        // Save best creature's learned offsets + cloud to SO
+        // Save best creature's full brain state (cloud + learnedOffsets) to SO
         int bestIdx = genomes.Count > 0 ? genomes.IndexOf(genomes[0]) : -1;
         if (bestIdx >= 0 && bestIdx < creatures.Count && creatures[bestIdx] != null)
         {
             var bestBrain = creatures[bestIdx].GetComponentInChildren<DecisionBrain>();
             if (bestBrain != null)
-            {
-                bestBrain.GetLearnableOffsets(bestLearnedOffsets);
-
-                // Persist cloud to saveTarget SO (which should be the same as loadSource on the prefab)
-                if (bestBrain.SaveTarget != null)
-                {
-                    bestBrain.SaveTarget.CopyFrom(bestBrain.Cloud);
-                    Debug.Log($"Gen {currentGeneration + 1}: saved cloud ({bestBrain.Cloud.Records.Count} records) to {bestBrain.SaveTarget.name}");
-                }
-            }
+                bestBrain.SaveToTarget();
         }
 
         Debug.Log($"Gen {currentGeneration + 1}: best={genomes[0].fitness:F2}");
