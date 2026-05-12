@@ -152,6 +152,7 @@ public class GeneticTrainer : MonoBehaviour
             if (controller != null)
             {
                 controller.ignoreMaxLifetimes = true;
+                controller.SetLevelBounds(levelBounds);
                 creatures.Add(controller);
             }
         }

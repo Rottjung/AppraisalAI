@@ -114,8 +114,6 @@ public class CreatureBrainController : MonoBehaviour
             cachedMetabolicStress = brain.GetFeatureNode("MetabolicStress");
             cachedRecoveryNeed = brain.GetFeatureNode("RecoveryNeed");
         }
-        if (levelBounds == null)
-            levelBounds = FindFirstObjectByType<LevelBounds>();
         health = maxHealth;
         startingY = transform.position.y;
     }
@@ -236,6 +234,11 @@ public class CreatureBrainController : MonoBehaviour
         learningState?.Apply("health", health / maxHealth, false);
         brain?.SetInputRaw("health", health / maxHealth);
         invincibilityTimer = damageInvincibilityTime;
+    }
+
+    public void SetLevelBounds(LevelBounds bounds)
+    {
+        levelBounds = bounds;
     }
 
     public void OnEnemyKilled()
