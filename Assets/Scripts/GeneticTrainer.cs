@@ -322,17 +322,45 @@ public class GeneticTrainer : MonoBehaviour
         int avgCount = brainsWithRecs > 0 ? totalRecs / brainsWithRecs : initialRecordCount;
         avgCount = Mathf.Clamp(avgCount, 1, initialRecordCount);
 
-        // Build each creature's cloud by randomly sampling + mutating
+        // Build each creature's cloud: guaranteed one per payload, then fill with random
+        var payloads = cloudPayloads;
         nextSOs.Clear();
         for (int c = 0; c < populationSize; c++)
         {
             var so = ScriptableObject.CreateInstance<BehaviorCloudData>();
             so.name = $"GenCloud_{c}";
 
-            for (int r = 0; r < avgCount && positivePool.Count > 0; r++)
+            // Guarantee at least one record per payload type (ensures Wander survives)
+            var usedPayloads = new System.Collections.Generic.HashSet<string>();
+            for (int p = 0; p < payloads.Length; p++)
+            {
+                var matching = new List<BehaviorRecord>();
+                for (int i = 0; i < positivePool.Count; i++)
+                {
+                    if (positivePool[i].PayloadId == payloads[p])
+                        matching.Add(positivePool[i]);
+                }
+                if (matching.Count > 0)
+                {
+                    var src = matching[Random.Range(0, matching.Count)];
+                    var rec = new BehaviorRecord($"bred_{src.PayloadId}_{c}_{p}", src.PayloadId);
+                    foreach (var coord in src.Coordinates)
+                    {
+                        float val = coord.Value + Random.Range(-mutationStrength, mutationStrength);
+                        rec.AddCoordinate(new BehaviorCoordinate(coord.BehaviorNodeId, Mathf.Clamp01(val), coord.Weight));
+                    }
+                    rec.Score = src.Score;
+                    so.CopyRecord(rec);
+                    usedPayloads.Add(src.PayloadId);
+                }
+            }
+
+            // Fill remaining slots randomly from the pool
+            int remaining = avgCount - so.RecordCount;
+            for (int r = 0; r < remaining && positivePool.Count > 0; r++)
             {
                 var source = positivePool[Random.Range(0, positivePool.Count)];
-                var rec = new BehaviorRecord($"bred_{source.PayloadId}_{c}_{r}", source.PayloadId);
+                var rec = new BehaviorRecord($"bred_{source.PayloadId}_{c}_{r + payloads.Length}", source.PayloadId);
                 foreach (var coord in source.Coordinates)
                 {
                     float val = coord.Value + Random.Range(-mutationStrength, mutationStrength);
@@ -342,7 +370,7 @@ public class GeneticTrainer : MonoBehaviour
                 so.CopyRecord(rec);
             }
 
-            // Ensure minimum coverage: seed missing payloads if cloud is empty
+            // Ultimate fallback if still empty
             if (so.RecordCount == 0 && positivePool.Count > 0)
             {
                 var any = positivePool[Random.Range(0, positivePool.Count)];
