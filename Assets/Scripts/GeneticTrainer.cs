@@ -141,8 +141,6 @@ public class GeneticTrainer : MonoBehaviour
                 genomes.Add(g);
             }
 
-            // Gen 1: seed the cloud with random records covering all payloads
-            GenerateRandomCloud();
         }
 
         SpawnCreatures();
@@ -167,14 +165,28 @@ public class GeneticTrainer : MonoBehaviour
             {
                 brain.SetLearnableWeights(genomes[i].weights);
 
-                // Every creature gets its own private SO — a deep copy of the seed SO
                 var creatureSO = ScriptableObject.CreateInstance<BehaviorCloudData>();
                 creatureSO.name = $"Creature_{i}_Brain";
 
                 if (i < nextSOs.Count && nextSOs[i] != null)
+                {
                     creatureSO.CopyFromSO(nextSOs[i]);
-                else if (seedSO != null)
-                    creatureSO.CopyFromSO(seedSO);
+                }
+                else
+                {
+                    // Gen 1: each creature gets unique random records for diversity
+                    int recsPerPayload = Mathf.Max(1, initialRecordCount / cloudPayloads.Length);
+                    for (int p = 0; p < cloudPayloads.Length; p++)
+                    {
+                        for (int r = 0; r < recsPerPayload; r++)
+                        {
+                            var rec = new BehaviorRecord($"random_{cloudPayloads[p]}_{i}_{r}", cloudPayloads[p]);
+                            foreach (var nodeId in behaviorNodeIds)
+                                rec.AddCoordinate(new BehaviorCoordinate(nodeId, Random.Range(0f, 1f), 1f));
+                            creatureSO.CopyRecord(rec);
+                        }
+                    }
+                }
 
                 brain.SetSaveTarget(creatureSO);
                 brain.SetLoadSource(creatureSO);
@@ -189,32 +201,6 @@ public class GeneticTrainer : MonoBehaviour
                 creatures.Add(controller);
             }
         }
-    }
-
-    private void GenerateRandomCloud()
-    {
-        if (behaviorNodeIds.Length == 0 || cloudPayloads.Length == 0) return;
-
-        // Create a seed SO with random records covering all payloads
-        var cloud = new BehaviorCloud();
-        int recsPerPayload = Mathf.Max(1, initialRecordCount / cloudPayloads.Length);
-
-        for (int p = 0; p < cloudPayloads.Length; p++)
-        {
-            for (int r = 0; r < recsPerPayload; r++)
-            {
-                var rec = new BehaviorRecord($"random_{cloudPayloads[p]}_{r}", cloudPayloads[p]);
-                foreach (var nodeId in behaviorNodeIds)
-                    rec.AddCoordinate(new BehaviorCoordinate(nodeId, Random.Range(0f, 1f), 1f));
-                cloud.AddRecord(rec);
-            }
-        }
-
-        // Copy to seedSO
-        if (seedSO != null)
-            seedSO.CopyFrom(cloud);
-
-        Debug.Log($"Generated {cloud.Records.Count} random records across {cloudPayloads.Length} payloads");
     }
 
     private void ClearCreatures()
