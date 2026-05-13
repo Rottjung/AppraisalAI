@@ -287,55 +287,81 @@ public class GeneticTrainer : MonoBehaviour
         }
         genomes = nextGen;
 
-        // Build nextSOs: each creature gets a cloud from the highest-scored records
+        // Collect only positive-scored records from top brains
+        var positivePool = new List<BehaviorRecord>();
+        int totalRecs = 0;
+        int brainsWithRecs = 0;
+        foreach (var brain in topBrains)
+        {
+            if (brain?.SaveTarget == null) continue;
+            int count = 0;
+            foreach (var rec in brain.SaveTarget.Records)
+            {
+                if (rec != null && rec.Score > 0f)
+                {
+                    positivePool.Add(rec);
+                    count++;
+                }
+            }
+            if (count > 0) { totalRecs += count; brainsWithRecs++; }
+        }
+
+        if (positivePool.Count == 0)
+        {
+            // Fallback: use all records regardless of score
+            foreach (var brain in topBrains)
+            {
+                if (brain?.SaveTarget == null) continue;
+                foreach (var rec in brain.SaveTarget.Records)
+                    if (rec != null) positivePool.Add(rec);
+            }
+        }
+
+        int avgCount = brainsWithRecs > 0 ? totalRecs / brainsWithRecs : initialRecordCount;
+        avgCount = Mathf.Clamp(avgCount, 1, initialRecordCount);
+
+        // Build each creature's cloud by randomly sampling + mutating
         nextSOs.Clear();
         for (int c = 0; c < populationSize; c++)
         {
             var so = ScriptableObject.CreateInstance<BehaviorCloudData>();
             so.name = $"GenCloud_{c}";
 
-            // Take top records directly
-            int takeCount = Mathf.Min(initialRecordCount / 2, allRecords.Count);
-            for (int i = 0; i < takeCount; i++)
-                so.CopyRecord(allRecords[i]);
-
-            // Fill rest with crossbred records from random pairs
-            while (so.RecordCount < initialRecordCount && allRecords.Count >= 2)
+            for (int r = 0; r < avgCount && positivePool.Count > 0; r++)
             {
-                var a = allRecords[Random.Range(0, Mathf.Min(topN * 3, allRecords.Count))];
-                var b = allRecords[Random.Range(0, Mathf.Min(topN * 3, allRecords.Count))];
-
-                // Crossbreed by taking majority of coordinates from higher-scored parent
-                var parentBetter = a.Score >= b.Score ? a : b;
-                var parentOther = a.Score >= b.Score ? b : a;
-
-                var childRec = new BehaviorRecord($"bred_{c}_{so.RecordCount}", parentBetter.PayloadId);
-                foreach (var coord in parentBetter.Coordinates)
+                var source = positivePool[Random.Range(0, positivePool.Count)];
+                var rec = new BehaviorRecord($"bred_{c}_{r}", source.PayloadId);
+                foreach (var coord in source.Coordinates)
                 {
-                    float otherVal = 0f;
-                    foreach (var oc in parentOther.Coordinates)
-                    {
-                        if (oc.BehaviorNodeId == coord.BehaviorNodeId)
-                        { otherVal = oc.Value; break; }
-                    }
-                    float val = (coord.Value + otherVal) * 0.5f + Random.Range(-0.1f, 0.1f);
-                    childRec.AddCoordinate(new BehaviorCoordinate(coord.BehaviorNodeId, Mathf.Clamp01(val), coord.Weight));
+                    float val = coord.Value + Random.Range(-mutationStrength, mutationStrength);
+                    rec.AddCoordinate(new BehaviorCoordinate(coord.BehaviorNodeId, Mathf.Clamp01(val), coord.Weight));
                 }
-                childRec.Score = (parentBetter.Score + parentOther.Score) * 0.5f;
-                so.CopyRecord(childRec);
+                rec.Score = source.Score;
+                so.CopyRecord(rec);
+            }
+
+            // Ensure minimum coverage: seed missing payloads if cloud is empty
+            if (so.RecordCount == 0 && positivePool.Count > 0)
+            {
+                var any = positivePool[Random.Range(0, positivePool.Count)];
+                var fallback = new BehaviorRecord($"seed_{c}_0", any.PayloadId);
+                foreach (var coord in any.Coordinates)
+                    fallback.AddCoordinate(new BehaviorCoordinate(coord.BehaviorNodeId, coord.Value, coord.Weight));
+                fallback.Score = any.Score;
+                so.CopyRecord(fallback);
             }
 
             nextSOs.Add(so);
         }
 
-        // Update seedSO from best records for the GenerateRandomCloud fallback
-        if (allRecords.Count > 0)
+        // Update seedSO from a random top creature for the next generation
+        if (positivePool.Count > 0)
         {
             var bestCloud = new BehaviorCloud();
-            int take = Mathf.Min(initialRecordCount, allRecords.Count);
+            int take = Mathf.Min(avgCount, positivePool.Count);
             for (int i = 0; i < take; i++)
             {
-                var rec = allRecords[i];
+                var rec = positivePool[i];
                 var copy = new BehaviorRecord(rec.Id, rec.PayloadId);
                 foreach (var coord in rec.Coordinates)
                     copy.AddCoordinate(new BehaviorCoordinate(coord.BehaviorNodeId, coord.Value, coord.Weight));
