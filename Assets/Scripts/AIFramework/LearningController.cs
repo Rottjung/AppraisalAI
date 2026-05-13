@@ -82,6 +82,7 @@ public class LearningController : MonoBehaviour
                 {
                     new RewardTermDefinition("foodConsumed", RewardEvaluationMode.Delta, 2f),
                     new RewardTermDefinition("isDead", RewardEvaluationMode.EndValue, -3f),
+                    new RewardTermDefinition("distanceTraveled", RewardEvaluationMode.Delta, 0.5f),
                     new RewardTermDefinition("hunger", RewardEvaluationMode.EndValue, -0.5f),
                     new RewardTermDefinition("energy", RewardEvaluationMode.Delta, 0.3f),
                     new RewardTermDefinition("MetabolicStress", RewardEvaluationMode.EndValue, -0.3f),

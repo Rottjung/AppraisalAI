@@ -733,10 +733,10 @@ MonoBehaviour:
     - sourceNodeId: enemyProximity
       weight: -1.5
       isEnabled: 1
-      isLearnable: 0
+      isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: 0
-      maxEffectiveWeight: 0
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: energy
       weight: 0.2
       isEnabled: 1
@@ -756,8 +756,8 @@ MonoBehaviour:
       isEnabled: 1
       isLearnable: 1
       learnedOffset: 0
-      minEffectiveWeight: 0
-      maxEffectiveWeight: 0
+      minEffectiveWeight: -2
+      maxEffectiveWeight: 2
     - sourceNodeId: idleTime
       weight: 0.5
       isEnabled: 0
@@ -992,8 +992,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4294254668
+  m_fontColor: {r: 0.29749137, g: 0.1254902, b: 0.9607843, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1129,8 +1129,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4294254668
+  m_fontColor: {r: 0.29749137, g: 0.1254902, b: 0.9607843, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1844,8 +1844,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4294254668
+  m_fontColor: {r: 0.29749137, g: 0.1254902, b: 0.9607843, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1981,8 +1981,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4279900698
-  m_fontColor: {r: 0.1, g: 0.1, b: 0.1, a: 1}
+    rgba: 4294254668
+  m_fontColor: {r: 0.29749137, g: 0.1254902, b: 0.9607843, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

@@ -82,10 +82,12 @@ public class CreatureBrainController : MonoBehaviour
     [SerializeField] private float respawnDelay = 1f;
     [System.NonSerialized] public bool ignoreMaxLifetimes;
     [System.NonSerialized] public float totalTimeAlive;
+    [System.NonSerialized] public float totalDistanceTraveled;
     [System.NonSerialized] public int totalFoodConsumed;
     [System.NonSerialized] public int totalEnemyKilled;
     [System.NonSerialized] public float avgEnergy;
     [System.NonSerialized] public float avgHealth;
+    private Vector3 lastPosition;
 
     [Header("Debug")]
     [SerializeField] private bool logDecisions = false;
@@ -121,6 +123,7 @@ public class CreatureBrainController : MonoBehaviour
         }
         health = maxHealth;
         startingY = transform.position.y;
+        lastPosition = transform.position;
     }
 
     private void Start()
@@ -129,6 +132,7 @@ public class CreatureBrainController : MonoBehaviour
             debugText = GetComponentInChildren<TMPro.TMP_Text>();
         sensors?.EnsureSignal("health", 1f);
         learningState?.EnsureSignal("enemyKilled", SignalType.Int, 0);
+        learningState?.EnsureSignal("distanceTraveled", SignalType.Float, 0f);
         SetupAttackDrive();
         AllCreatures.Add(this);
         OnCreatureSpawned?.Invoke(this);
@@ -212,6 +216,9 @@ public class CreatureBrainController : MonoBehaviour
         if (!isDead)
         {
             totalTimeAlive += dt;
+            totalDistanceTraveled += Vector3.Distance(transform.position, lastPosition);
+            lastPosition = transform.position;
+            learningState?.SetSignal("distanceTraveled", totalDistanceTraveled);
             avgEnergy = Mathf.Lerp(avgEnergy, sensors.GetValue("energy"), 0.01f);
             avgHealth = Mathf.Lerp(avgHealth, health / maxHealth, 0.01f);
         }

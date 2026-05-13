@@ -26,6 +26,7 @@ public class GeneticTrainer : MonoBehaviour
 
     [Header("Fitness Weights")]
     [SerializeField] private float fitnessTimeAlive = 1f;
+    [SerializeField] private float fitnessDistanceTraveled = 2f;
     [SerializeField] private float fitnessFoodEaten = 2f;
     [SerializeField] private float fitnessEnemyKilled = 3f;
     [SerializeField] private float fitnessAvgEnergy = 1f;
@@ -227,6 +228,7 @@ public class GeneticTrainer : MonoBehaviour
             var c = creatures[i];
             genomes[i].fitness =
                 c.totalTimeAlive * fitnessTimeAlive +
+                c.totalDistanceTraveled * fitnessDistanceTraveled +
                 c.totalFoodConsumed * fitnessFoodEaten +
                 c.totalEnemyKilled * fitnessEnemyKilled +
                 c.avgEnergy * fitnessAvgEnergy +
@@ -330,7 +332,7 @@ public class GeneticTrainer : MonoBehaviour
             for (int r = 0; r < avgCount && positivePool.Count > 0; r++)
             {
                 var source = positivePool[Random.Range(0, positivePool.Count)];
-                var rec = new BehaviorRecord($"bred_{c}_{r}", source.PayloadId);
+                var rec = new BehaviorRecord($"bred_{source.PayloadId}_{c}_{r}", source.PayloadId);
                 foreach (var coord in source.Coordinates)
                 {
                     float val = coord.Value + Random.Range(-mutationStrength, mutationStrength);
