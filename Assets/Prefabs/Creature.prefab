@@ -460,6 +460,7 @@ MonoBehaviour:
   previousTargetBias: 0.8
   minDistanceFromCurrentWhenChained: 1.5
   explorationRate: 0.15
+  recordScoreRate: 0.1
   randomPayloads:
   - Wander
   - SeekFood
@@ -896,8 +897,8 @@ MonoBehaviour:
     records: []
     maxRecords: 50
   saveOnQuit: 1
-  saveTarget: {fileID: 11400000, guid: 61b572d3cd902c44f9e53eb412c4db2a, type: 2}
-  loadSource: {fileID: 11400000, guid: 61b572d3cd902c44f9e53eb412c4db2a, type: 2}
+  saveTarget: {fileID: 0}
+  loadSource: {fileID: 0}
 --- !u!114 &9076142901692007415
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public class GeneticTrainer : MonoBehaviour
@@ -18,6 +19,10 @@ public class GeneticTrainer : MonoBehaviour
     [Header("Cloud Setup")]
     [SerializeField] private int initialRecordCount = 18;
     [SerializeField] private string[] cloudPayloads = new[] { "Wander", "SeekFood", "FleeEnemy", "Attack", "Idle" };
+
+    [Header("Save Session")]
+    [SerializeField] private bool saveSessionOnComplete = true;
+    [SerializeField] private string sessionName = "";
 
     [Header("Fitness Weights")]
     [SerializeField] private float fitnessTimeAlive = 1f;
@@ -128,6 +133,7 @@ public class GeneticTrainer : MonoBehaviour
         if (currentGeneration >= generations)
         {
             Debug.Log($"GeneticTrainer: completed {generations} generations");
+            SaveSessionAssets();
             isRunning = false;
             return;
         }
@@ -340,5 +346,42 @@ public class GeneticTrainer : MonoBehaviour
             }
             if (seedSO != null) seedSO.CopyFrom(bestCloud);
         }
+    }
+
+    private void SaveSessionAssets()
+    {
+#if UNITY_EDITOR
+        if (!saveSessionOnComplete) return;
+
+        string session = string.IsNullOrWhiteSpace(sessionName)
+            ? $"GA_{System.DateTime.Now:yyyyMMdd_HHmmss}"
+            : sessionName;
+        string folderPath = Path.Combine("Assets", "Brains", session);
+        Directory.CreateDirectory(folderPath);
+
+        // Sort creatures by totalTimeAlive as a fitness proxy
+        var ranked = new List<(CreatureBrainController c, float score)>();
+        for (int i = 0; i < creatures.Count; i++)
+        {
+            if (creatures[i] != null)
+                ranked.Add((creatures[i], creatures[i].totalTimeAlive));
+        }
+        ranked.Sort((a, b) => b.score.CompareTo(a.score));
+
+        int saveCount = Mathf.Min(topN, ranked.Count);
+        for (int i = 0; i < saveCount; i++)
+        {
+            var brain = ranked[i].c.GetComponentInChildren<DecisionBrain>();
+            if (brain?.SaveTarget == null) continue;
+
+            brain.SaveToTarget();
+            string path = Path.Combine(folderPath, $"{ranked[i].c.name}_cloud.asset");
+            UnityEditor.AssetDatabase.CreateAsset(brain.SaveTarget, path);
+        }
+
+        UnityEditor.AssetDatabase.SaveAssets();
+        UnityEditor.AssetDatabase.Refresh();
+        Debug.Log($"Saved {saveCount} SO assets to {folderPath}");
+#endif
     }
 }
