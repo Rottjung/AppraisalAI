@@ -15,6 +15,10 @@ public class GeneticTrainer : MonoBehaviour
     [SerializeField] private GameObject creaturePrefab;
     [SerializeField] private LevelBounds levelBounds;
 
+    [Header("Cloud Setup")]
+    [SerializeField] private int initialRecordCount = 18;
+    [SerializeField] private string[] cloudPayloads = new[] { "Wander", "SeekFood", "FleeEnemy", "Attack", "Idle" };
+
     [Header("Fitness Weights")]
     [SerializeField] private float fitnessTimeAlive = 1f;
     [SerializeField] private float fitnessFoodEaten = 2f;
@@ -31,6 +35,7 @@ public class GeneticTrainer : MonoBehaviour
     private float spawnY;
     private BehaviorCloudData seedSO;
     private List<BehaviorCloudData> nextSOs = new();
+    private string[] behaviorNodeIds;
 
     private class Genome
     {
@@ -95,6 +100,13 @@ public class GeneticTrainer : MonoBehaviour
         spawnY = creaturePrefab.transform.position.y;
         if (spawnY == 0f) spawnY = 0.5f;
 
+        // Collect behavior node IDs for generating random records
+        var nodeList = new List<string>();
+        foreach (var node in templateBrain.BehaviorNodes)
+            if (node != null && node.IsEnabled)
+                nodeList.Add(node.Id);
+        behaviorNodeIds = nodeList.ToArray();
+
         // Seed SO comes from the prefab — either empty or a pre-trained SO the user assigned
         seedSO = templateBrain.SaveTarget;
 
@@ -128,6 +140,9 @@ public class GeneticTrainer : MonoBehaviour
                 g.Randomize(1f);
                 genomes.Add(g);
             }
+
+            // Gen 1: seed the cloud with random records covering all payloads
+            GenerateRandomCloud();
         }
 
         SpawnCreatures();
@@ -174,6 +189,32 @@ public class GeneticTrainer : MonoBehaviour
                 creatures.Add(controller);
             }
         }
+    }
+
+    private void GenerateRandomCloud()
+    {
+        if (behaviorNodeIds.Length == 0 || cloudPayloads.Length == 0) return;
+
+        // Create a seed SO with random records covering all payloads
+        var cloud = new BehaviorCloud();
+        int recsPerPayload = Mathf.Max(1, initialRecordCount / cloudPayloads.Length);
+
+        for (int p = 0; p < cloudPayloads.Length; p++)
+        {
+            for (int r = 0; r < recsPerPayload; r++)
+            {
+                var rec = new BehaviorRecord($"random_{cloudPayloads[p]}_{r}", cloudPayloads[p]);
+                foreach (var nodeId in behaviorNodeIds)
+                    rec.AddCoordinate(new BehaviorCoordinate(nodeId, Random.Range(0f, 1f), 1f));
+                cloud.AddRecord(rec);
+            }
+        }
+
+        // Copy to seedSO
+        if (seedSO != null)
+            seedSO.CopyFrom(cloud);
+
+        Debug.Log($"Generated {cloud.Records.Count} random records across {cloudPayloads.Length} payloads");
     }
 
     private void ClearCreatures()
@@ -228,26 +269,22 @@ public class GeneticTrainer : MonoBehaviour
 
     private void BreedNextGeneration(List<DecisionBrain> topBrains)
     {
-        var nextGen = new List<Genome>();
-        nextSOs.Clear();
-
-        // Keep elite: top N genomes, each gets a copy of its own parent SO
-        for (int i = 0; i < topN && i < genomes.Count; i++)
+        // Collect all records from top creatures, sorted by score
+        var allRecords = new List<BehaviorRecord>();
+        foreach (var brain in topBrains)
         {
-            nextGen.Add(genomes[i].Clone());
-            if (i < topBrains.Count && topBrains[i]?.SaveTarget != null)
-            {
-                var so = ScriptableObject.CreateInstance<BehaviorCloudData>();
-                so.CopyFromSO(topBrains[i].SaveTarget);
-                nextSOs.Add(so);
-            }
-            else
-            {
-                nextSOs.Add(null);
-            }
+            if (brain?.SaveTarget == null) continue;
+            foreach (var rec in brain.SaveTarget.Records)
+                if (rec != null) allRecords.Add(rec);
         }
 
-        // Fill rest with crossbred SOs + mutated genomes
+        allRecords.Sort((a, b) => b.Score.CompareTo(a.Score));
+
+        // Breed genomes
+        var nextGen = new List<Genome>();
+        for (int i = 0; i < topN && i < genomes.Count; i++)
+            nextGen.Add(genomes[i].Clone());
+
         while (nextGen.Count < populationSize)
         {
             var parentA = genomes[Random.Range(0, topN)];
@@ -255,22 +292,67 @@ public class GeneticTrainer : MonoBehaviour
             var child = Genome.Crossover(parentA, parentB);
             child.Mutate(mutationRate, mutationStrength);
             nextGen.Add(child);
+        }
+        genomes = nextGen;
 
-            // Crossbreed and mutate the SOs
-            int idxA = Random.Range(0, topBrains.Count);
-            int idxB = Random.Range(0, topBrains.Count);
-            var soA = topBrains[idxA]?.SaveTarget;
-            var soB = topBrains[idxB]?.SaveTarget;
-            var childSO = ScriptableObject.CreateInstance<BehaviorCloudData>();
-            if (soA != null && soB != null)
-                childSO.CrossbreedFrom(soA, soB, mutationRate, mutationStrength);
-            else if (soA != null)
-                childSO.CopyFromSO(soA);
-            else if (soB != null)
-                childSO.CopyFromSO(soB);
-            nextSOs.Add(childSO);
+        // Build nextSOs: each creature gets a cloud from the highest-scored records
+        nextSOs.Clear();
+        for (int c = 0; c < populationSize; c++)
+        {
+            var so = ScriptableObject.CreateInstance<BehaviorCloudData>();
+            so.name = $"GenCloud_{c}";
+
+            // Take top records directly
+            int takeCount = Mathf.Min(initialRecordCount / 2, allRecords.Count);
+            for (int i = 0; i < takeCount; i++)
+                so.CopyRecord(allRecords[i]);
+
+            // Fill rest with crossbred records from random pairs
+            while (so.RecordCount < initialRecordCount && allRecords.Count >= 2)
+            {
+                var a = allRecords[Random.Range(0, Mathf.Min(topN * 3, allRecords.Count))];
+                var b = allRecords[Random.Range(0, Mathf.Min(topN * 3, allRecords.Count))];
+
+                // Crossbreed by taking majority of coordinates from higher-scored parent
+                var parentBetter = a.Score >= b.Score ? a : b;
+                var parentOther = a.Score >= b.Score ? b : a;
+
+                var childRec = new BehaviorRecord($"bred_{c}_{so.RecordCount}", parentBetter.PayloadId);
+                foreach (var coord in parentBetter.Coordinates)
+                {
+                    float otherVal = 0f;
+                    foreach (var oc in parentOther.Coordinates)
+                    {
+                        if (oc.BehaviorNodeId == coord.BehaviorNodeId)
+                        { otherVal = oc.Value; break; }
+                    }
+                    float val = (coord.Value + otherVal) * 0.5f + Random.Range(-0.1f, 0.1f);
+                    childRec.AddCoordinate(new BehaviorCoordinate(coord.BehaviorNodeId, Mathf.Clamp01(val), coord.Weight));
+                }
+                childRec.Score = (parentBetter.Score + parentOther.Score) * 0.5f;
+                so.CopyRecord(childRec);
+            }
+
+            nextSOs.Add(so);
         }
 
-        genomes = nextGen;
+        // Update seedSO from best records for the GenerateRandomCloud fallback
+        if (allRecords.Count > 0)
+        {
+            var bestCloud = new BehaviorCloud();
+            int take = Mathf.Min(initialRecordCount, allRecords.Count);
+            for (int i = 0; i < take; i++)
+            {
+                var rec = allRecords[i];
+                var copy = new BehaviorRecord(rec.Id, rec.PayloadId);
+                foreach (var coord in rec.Coordinates)
+                    copy.AddCoordinate(new BehaviorCoordinate(coord.BehaviorNodeId, coord.Value, coord.Weight));
+                foreach (var filter in rec.Filters)
+                    copy.AddFilter(filter);
+                copy.Score = rec.Score;
+                bestCloud.AddRecord(copy);
+            }
+            if (seedSO != null) seedSO.CopyFrom(bestCloud);
+        }
     }
 }

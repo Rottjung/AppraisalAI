@@ -52,7 +52,9 @@ public class CreatureBrainController : MonoBehaviour
 
     [Header("Exploration")]
     [SerializeField, Range(0f, 1f)] private float explorationRate = 0.15f;
-    [SerializeField]     private string[] randomPayloads = new[] { "Wander", "SeekFood", "FleeEnemy", "Attack", "Idle" };
+    [SerializeField] private float recordScoreRate = 0.1f;
+    [SerializeField] private string[] randomPayloads = new[] { "Wander", "SeekFood", "FleeEnemy", "Attack", "Idle" };
+    [System.NonSerialized] public BehaviorRecord selectedRecord;
 
     [Header("Health")]
     [SerializeField] private float maxHealth = 3f;
@@ -393,18 +395,7 @@ public class CreatureBrainController : MonoBehaviour
 
         RecordStepForActiveEpisode();
 
-        // True epsilon-greedy: explore by picking a random payload directly
-        if (explorationRate > 0f && Random.value < explorationRate && randomPayloads.Length > 0)
-        {
-            string explorePayload = randomPayloads[Random.Range(0, randomPayloads.Length)];
-            if (debugText != null) debugText.text = explorePayload;
-            if (currentPayload != explorePayload)
-                OnPayloadChanged(currentPayload, explorePayload);
-            currentPayload = explorePayload;
-            return;
-        }
-
-        // Exploit: pick nearest valid cloud record
+        // Pick nearest valid cloud record
         List<RetrievalCandidate> candidates = brain.QueryCloudCandidates();
         RetrievalCandidate result = DecisionFilter.SelectFirstValid(candidates, sensors);
 
@@ -420,6 +411,7 @@ public class CreatureBrainController : MonoBehaviour
             return;
         }
 
+        selectedRecord = result.Record;
         string proposedPayload = result.Record.PayloadId ?? "Idle";
         if (debugText != null) debugText.text = proposedPayload;
 
@@ -451,6 +443,11 @@ public class CreatureBrainController : MonoBehaviour
         if (activeEpisodeType != null && learningController != null)
         {
             learningController.EndEpisode();
+            if (selectedRecord != null)
+            {
+                selectedRecord.Score += learningController.lastNormalizedReward * recordScoreRate;
+                selectedRecord = null;
+            }
             activeEpisodeType = null;
         }
     }

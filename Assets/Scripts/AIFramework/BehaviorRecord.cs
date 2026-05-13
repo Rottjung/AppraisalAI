@@ -9,11 +9,14 @@ public sealed class BehaviorRecord
     [SerializeField] private string payloadId;
     [SerializeField] private List<BehaviorCoordinate> coordinates = new();
     [SerializeField] private List<PayloadFilter> filters = new();
+    [SerializeField] private float score;
+
     public IReadOnlyList<PayloadFilter> Filters => filters;
 
     public string Id => id;
     public string PayloadId => payloadId;
     public IReadOnlyList<BehaviorCoordinate> Coordinates => coordinates;
+    public float Score { get => score; set => score = value; }
 
     public BehaviorRecord(string id, string payloadId)
     {

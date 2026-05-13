@@ -23,6 +23,7 @@ public class LearningController : MonoBehaviour
     private bool episodeActive;
     private LearningEpisodeDefinition activeEpisode;
     private LearningSnapshot startSnapshot;
+    [System.NonSerialized] public float lastNormalizedReward;
 
     private readonly Dictionary<string, Dictionary<string, float>> behaviorTraces = new();
     private readonly Dictionary<string, int> behaviorSampleCounts = new();
@@ -220,6 +221,7 @@ public class LearningController : MonoBehaviour
             -1f,
             1f
         );
+        lastNormalizedReward = normalized;
 
         IReadOnlyList<string> targetBehaviorIds = activeEpisode.TargetBehaviorIds;
         for (int i = 0; i < targetBehaviorIds.Count; i++)

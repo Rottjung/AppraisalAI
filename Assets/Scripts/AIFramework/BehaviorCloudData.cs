@@ -9,6 +9,19 @@ public class BehaviorCloudData : ScriptableObject
 
     public IReadOnlyList<BehaviorRecord> Records => records;
     public float[] LearnedOffsets => learnedOffsets;
+    public int RecordCount => records.Count;
+
+    public void CopyRecord(BehaviorRecord rec)
+    {
+        if (rec == null) return;
+        var copy = new BehaviorRecord(rec.Id, rec.PayloadId);
+        foreach (var coord in rec.Coordinates)
+            copy.AddCoordinate(new BehaviorCoordinate(coord.BehaviorNodeId, coord.Value, coord.Weight));
+        foreach (var filter in rec.Filters)
+            copy.AddFilter(filter);
+        copy.Score = rec.Score;
+        records.Add(copy);
+    }
 
     public void CopyFrom(BehaviorCloud cloud)
     {
